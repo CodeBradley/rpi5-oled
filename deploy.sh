@@ -43,6 +43,14 @@ ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv --system-site-packages ve
 echo "Installing Python dependencies..."
 ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --break-system-packages adafruit-blinka adafruit-circuitpython-ssd1306 adafruit-circuitpython-display-text"
 
+# Find and link the _lgpio module
+echo "Linking _lgpio module..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && \
+  VENV_SITE_PACKAGES=\$(./venv/bin/python -c \"import site; print(site.getsitepackages()[0])\") && \
+  sudo find /usr/lib -name '_lgpio*.so' -exec ln -sf {} \$VENV_SITE_PACKAGES/ \; && \
+  sudo find /usr/lib/python3/dist-packages -name 'lgpio*.py' -exec ln -sf {} \$VENV_SITE_PACKAGES/ \; && \
+  echo 'Linked lgpio modules to virtual environment'"
+
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
 ssh $REMOTE_USER@$HOST "mkdir -p $APP_DIR/icons"
