@@ -1,11 +1,11 @@
 """
 Display handling for the Raspberry Pi 5 OLED display application.
 """
-import board
-import busio
-import adafruit_ssd1306
-from PIL import Image, ImageDraw, ImageFont
 import os
+import logging
+from PIL import Image, ImageDraw, ImageFont
+from luma.core.interface.serial import i2c
+from luma.oled.device import ssd1306
 import config
 
 
@@ -13,29 +13,28 @@ class OLEDDisplay:
     """Class to manage the OLED display."""
     
     def __init__(self):
-        # Initialize I2C
-        self.i2c = busio.I2C(board.SCL, board.SDA)
-        
-        # Initialize display
-        self.display = adafruit_ssd1306.SSD1306_I2C(
-            config.DISPLAY_WIDTH, 
-            config.DISPLAY_HEIGHT, 
-            self.i2c, 
-            addr=config.I2C_ADDRESS
-        )
-        
-        # Create blank image for drawing
-        self.image = Image.new("1", (config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT))
-        self.draw = ImageDraw.Draw(self.image)
-        
-        # Load default font
-        self.font = ImageFont.load_default()
-        
-        # Load icons
-        self.icons = self._load_icons()
-        
-        # Clear the display on startup
-        self.clear()
+        try:
+            # Initialize I2C and SSD1306
+            self.serial = i2c(port=1, address=config.I2C_ADDRESS)
+            self.display = ssd1306(self.serial, 
+                                  width=config.DISPLAY_WIDTH, 
+                                  height=config.DISPLAY_HEIGHT)
+            
+            # Create blank image for drawing
+            self.image = Image.new("1", (config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT))
+            self.draw = ImageDraw.Draw(self.image)
+            
+            # Load default font
+            self.font = ImageFont.load_default()
+            
+            # Load icons
+            self.icons = self._load_icons()
+            
+            # Clear the display on startup
+            self.clear()
+        except Exception as e:
+            logging.error(f"Error initializing display: {e}")
+            raise
     
     def _load_icons(self):
         """Load icon images."""
@@ -93,13 +92,11 @@ class OLEDDisplay:
     def clear(self):
         """Clear the display."""
         self.draw.rectangle([(0, 0), (config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT)], fill=0)
-        self.display.fill(0)
-        self.display.show()
+        self.display.clear()
     
     def show(self):
         """Update the display with the current image."""
-        self.display.image(self.image)
-        self.display.show()
+        self.display.display(self.image)
     
     def draw_text(self, position, text, fill=1):
         """Draw text at the specified position."""
