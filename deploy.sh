@@ -33,11 +33,15 @@ ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 
 # Install system dependencies
 echo "Installing system dependencies..."
-ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-dev i2c-tools python3-smbus python3-lgpio python3-pil python3-adafruit-blinka"
+ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus python3-lgpio python3-pil"
 
-# Install Python dependencies system-wide
+# Set up virtual environment with access to system packages
+echo "Setting up virtual environment..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv --system-site-packages venv"
+
+# Install Python dependencies in the virtual environment
 echo "Installing Python dependencies..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && sudo pip3 install -r requirements.txt"
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --break-system-packages adafruit-blinka adafruit-circuitpython-ssd1306 adafruit-circuitpython-display-text"
 
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
