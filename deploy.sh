@@ -51,4 +51,8 @@ ssh $REMOTE_USER@$HOST "sudo systemctl daemon-reload && sudo systemctl restart $
 echo "Service status:"
 ssh $REMOTE_USER@$HOST "sudo systemctl status $SERVICE_NAME --no-pager"
 
-echo "Deployment complete!"
+# View detailed logs
+echo "\nDetailed logs:"
+ssh $REMOTE_USER@$HOST "sudo journalctl -u $SERVICE_NAME -n 20 --no-pager"
+
+echo "\nDeployment complete!"

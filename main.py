@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+import traceback
+import os
+
+# Create a debug log file
+debug_log = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'debug.log')
+
+# Function to log errors
+def log_error(message):
+    with open(debug_log, 'a') as f:
+        f.write(message + '\n')
+
 """
 Main application for the Raspberry Pi 5 OLED display system monitor.
 Displays IP address, hostname, uptime, SSH and Docker status on a 0.91" I2C OLED display.
@@ -72,5 +83,10 @@ class Application:
 
 
 if __name__ == "__main__":
-    app = Application()
-    app.run()
+    try:
+        app = Application()
+        app.run()
+    except Exception as e:
+        error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)  # Print to stderr for systemd journal
+        log_error(error_msg)  # Log to file for debugging
