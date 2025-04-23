@@ -31,13 +31,17 @@ echo "Copying service file..."
 scp $SERVICE_NAME.service $REMOTE_USER@$HOST:/tmp/
 ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 
-# Install dependencies if needed
-echo "Checking dependencies..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && pip3 install -r requirements.txt"
+# Install system dependencies
+echo "Installing system dependencies..."
+ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus"
 
-# Install Adafruit Blinka (CircuitPython) system-wide
-echo "Installing Adafruit Blinka (CircuitPython)..."
-ssh $REMOTE_USER@$HOST "sudo pip3 install adafruit-blinka"
+# Set up virtual environment
+echo "Setting up virtual environment..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv venv"
+
+# Install dependencies in the virtual environment
+echo "Installing Python dependencies in virtual environment..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --upgrade pip && ./venv/bin/pip install -r requirements.txt && ./venv/bin/pip install adafruit-blinka"
 
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."

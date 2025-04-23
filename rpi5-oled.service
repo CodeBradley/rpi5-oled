@@ -3,7 +3,7 @@ Description=Raspberry Pi 5 OLED System Monitor
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/brad/rpi5-oled/main.py
+ExecStart=/home/brad/rpi5-oled/venv/bin/python /home/brad/rpi5-oled/main.py
 WorkingDirectory=/home/brad/rpi5-oled
 StandardOutput=journal
 StandardError=journal
