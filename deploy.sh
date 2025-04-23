@@ -35,6 +35,10 @@ ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 echo "Checking dependencies..."
 ssh $REMOTE_USER@$HOST "cd $APP_DIR && pip3 install -r requirements.txt"
 
+# Install Adafruit Blinka (CircuitPython) system-wide
+echo "Installing Adafruit Blinka (CircuitPython)..."
+ssh $REMOTE_USER@$HOST "sudo pip3 install adafruit-blinka"
+
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
 ssh $REMOTE_USER@$HOST "mkdir -p $APP_DIR/icons"
