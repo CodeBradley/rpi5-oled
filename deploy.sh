@@ -33,23 +33,11 @@ ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 
 # Install system dependencies
 echo "Installing system dependencies..."
-ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus python3-lgpio"
+ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-dev i2c-tools python3-smbus python3-lgpio python3-pil python3-adafruit-blinka"
 
-# Set up virtual environment
-echo "Setting up virtual environment..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv venv"
-
-# Install dependencies in the virtual environment
-echo "Installing Python dependencies in virtual environment..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --upgrade pip && ./venv/bin/pip install -r requirements.txt && ./venv/bin/pip install adafruit-blinka"
-
-# Create symlinks for lgpio modules in the virtual environment
-echo "Setting up lgpio in virtual environment..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && \
-  VENV_SITE_PACKAGES=\$(./venv/bin/python -c \"import site; print(site.getsitepackages()[0])\") && \
-  sudo ln -sf /usr/lib/python3/dist-packages/lgpio.py \$VENV_SITE_PACKAGES/ && \
-  sudo find /usr/lib/python3/dist-packages -name '_lgpio*.so' -exec ln -sf {} \$VENV_SITE_PACKAGES/ \; && \
-  echo 'Linked lgpio modules to virtual environment'"
+# Install Python dependencies system-wide
+echo "Installing Python dependencies..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && sudo pip3 install -r requirements.txt"
 
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
