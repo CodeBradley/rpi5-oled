@@ -33,7 +33,7 @@ ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 
 # Install system dependencies
 echo "Installing system dependencies..."
-ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus"
+ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus python3-lgpio"
 
 # Set up virtual environment
 echo "Setting up virtual environment..."
