@@ -43,6 +43,10 @@ ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv venv"
 echo "Installing Python dependencies in virtual environment..."
 ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --upgrade pip && ./venv/bin/pip install -r requirements.txt && ./venv/bin/pip install adafruit-blinka"
 
+# Create a symlink for lgpio in the virtual environment
+echo "Setting up lgpio in virtual environment..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -c \"import site; import os; src='/usr/lib/python3/dist-packages/lgpio.py'; dst=os.path.join(site.getsitepackages()[0], 'lgpio.py'); print(f'Linking {src} to {dst}')\" && sudo ln -sf /usr/lib/python3/dist-packages/lgpio.py \$(cd $APP_DIR && ./venv/bin/python -c \"import site; print(site.getsitepackages()[0])\")"
+
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
 ssh $REMOTE_USER@$HOST "mkdir -p $APP_DIR/icons"
