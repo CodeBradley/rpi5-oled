@@ -33,23 +33,25 @@ ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
 
 # Install system dependencies
 echo "Installing system dependencies..."
-ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus python3-lgpio python3-pil"
+ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus git python3-pil"
 
 # Set up virtual environment with access to system packages
 echo "Setting up virtual environment..."
 ssh $REMOTE_USER@$HOST "cd $APP_DIR && python3 -m venv --system-site-packages venv"
 
+# Install Adafruit-Python-Shell and download the Blinka installer
+echo "Setting up Adafruit Blinka..."
+ssh $REMOTE_USER@$HOST "cd $APP_DIR && \
+  source venv/bin/activate && \
+  pip3 install --upgrade adafruit-python-shell && \
+  wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/raspi-blinka.py && \
+  sudo -E env PATH=\$PATH python3 raspi-blinka.py --no-reboot"
+
 # Install Python dependencies in the virtual environment
 echo "Installing Python dependencies..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && ./venv/bin/pip install --break-system-packages adafruit-blinka adafruit-circuitpython-ssd1306 adafruit-circuitpython-display-text"
-
-# Find and link the _lgpio module
-echo "Linking _lgpio module..."
 ssh $REMOTE_USER@$HOST "cd $APP_DIR && \
-  VENV_SITE_PACKAGES=\$(./venv/bin/python -c \"import site; print(site.getsitepackages()[0])\") && \
-  sudo find /usr/lib -name '_lgpio*.so' -exec ln -sf {} \$VENV_SITE_PACKAGES/ \; && \
-  sudo find /usr/lib/python3/dist-packages -name 'lgpio*.py' -exec ln -sf {} \$VENV_SITE_PACKAGES/ \; && \
-  echo 'Linked lgpio modules to virtual environment'"
+  source venv/bin/activate && \
+  pip3 install adafruit-circuitpython-ssd1306 adafruit-circuitpython-display-text"
 
 # Create icons directory and copy icons if needed
 echo "Setting up icons..."
