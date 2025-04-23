@@ -8,7 +8,12 @@ WorkingDirectory={{ rpi5_oled_install_dir }}
 StandardOutput=journal
 StandardError=journal
 Restart=always
+# Check if the specified user exists, otherwise default to root
+{% if rpi5_oled_use_root_user | default(false) %}
+User=root
+{% else %}
 User={{ rpi5_oled_user }}
+{% endif %}
 
 [Install]
 WantedBy=multi-user.target

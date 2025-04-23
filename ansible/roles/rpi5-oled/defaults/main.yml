@@ -2,8 +2,10 @@
 # defaults file for rpi5-oled
 
 # Installation settings
-rpi5_oled_install_dir: "/home/pi/rpi5-oled"
-rpi5_oled_user: "pi"
+rpi5_oled_install_dir: "/home/brad/rpi5-oled"
+rpi5_oled_user: "brad"
+# Set to true if the pi user doesn't exist or you want to run as root
+rpi5_oled_use_root_user: false
 
 # I2C settings
 rpi5_oled_i2c_port: 1

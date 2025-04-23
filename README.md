@@ -21,7 +21,7 @@ This application displays system information on a 0.91" I2C OLED display connect
 
 1. Clone this repository to your Raspberry Pi 5:
    ```
-   git clone https://github.com/yourusername/rpi5-oled.git
+   git clone https://github.com/CodeBradley/rpi5-oled.git
    cd rpi5-oled
    ```
 

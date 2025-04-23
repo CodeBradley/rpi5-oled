@@ -3,12 +3,13 @@ Description=Raspberry Pi 5 OLED System Monitor
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/pi/rpi5-oled/main.py
-WorkingDirectory=/home/pi/rpi5-oled
+ExecStart=/usr/bin/python3 /home/brad/rpi5-oled/main.py
+WorkingDirectory=/home/brad/rpi5-oled
 StandardOutput=journal
 StandardError=journal
 Restart=always
-User=pi
+# Changed from default pi user to brad
+User=brad
 
 [Install]
 WantedBy=multi-user.target
