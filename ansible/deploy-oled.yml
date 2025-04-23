@@ -1,0 +1,11 @@
+---
+# Playbook to deploy OLED display application to Raspberry Pi 5 devices
+- name: Deploy OLED display to Raspberry Pi 5 hosts
+  hosts: rpi5
+  gather_facts: yes
+  
+  roles:
+    - role: rpi5-oled
+      # You can override default variables here if needed
+      # For example:
+      # rpi5_oled_ip_address_interface: "eth0"

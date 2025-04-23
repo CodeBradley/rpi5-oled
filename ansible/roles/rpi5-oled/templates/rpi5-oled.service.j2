@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi 5 OLED System Monitor
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 {{ rpi5_oled_install_dir }}/main.py
+WorkingDirectory={{ rpi5_oled_install_dir }}
+StandardOutput=journal
+StandardError=journal
+Restart=always
+User={{ rpi5_oled_user }}
+
+[Install]
+WantedBy=multi-user.target
