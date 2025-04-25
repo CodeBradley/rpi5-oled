@@ -1,5 +1,12 @@
-adafruit-circuitpython-ssd1306>=2.12.0
-adafruit-circuitpython-display-text>=2.22.0
-Pillow>=9.0.0
-psutil>=5.9.0
-docker>=6.0.0
+# Core display libraries
+luma.oled>=3.9.0  # SSD1306 OLED display driver
+RPi.GPIO>=0.7.0  # GPIO access
+Pillow>=9.0.0    # Image processing
+
+# System monitoring
+psutil>=5.9.0    # System statistics
+docker>=6.0.0    # Docker container monitoring
+
+# Optional: Adafruit libraries as alternatives
+# adafruit-circuitpython-ssd1306>=2.12.0
+# adafruit-circuitpython-display-text>=2.22.0
