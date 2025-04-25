@@ -30,7 +30,16 @@ class OLEDDisplay:
             self.font = ImageFont.load_default()
             
             # Calculate font height for proper line spacing
-            self.font_height = self.font.getsize("A")[1]
+            # Use getbbox() for newer Pillow versions or fall back to getsize() for older versions
+            try:
+                # For newer Pillow versions
+                bbox = self.font.getbbox("A")
+                self.font_height = bbox[3] - bbox[1]
+                logging.info(f"Using font height {self.font_height} (getbbox method)")
+            except AttributeError:
+                # For older Pillow versions
+                self.font_height = self.font.getsize("A")[1]
+                logging.info(f"Using font height {self.font_height} (getsize method)")
             
             # Store last content for change detection
             self.last_content = None
@@ -158,12 +167,24 @@ class OLEDDisplay:
                 self.draw.text(position, text, font=self.font, fill=fill)
             elif align == "center":
                 # Calculate width of text for centering
-                text_width = self.font.getsize(text)[0]
+                try:
+                    # For newer Pillow versions
+                    bbox = self.font.getbbox(text)
+                    text_width = bbox[2] - bbox[0]
+                except AttributeError:
+                    # For older Pillow versions
+                    text_width = self.font.getsize(text)[0]
                 centered_position = (position[0] + (config.DISPLAY_WIDTH - text_width) // 2, position[1])
                 self.draw.text(centered_position, text, font=self.font, fill=fill)
             elif align == "right":
                 # Calculate width of text for right alignment
-                text_width = self.font.getsize(text)[0]
+                try:
+                    # For newer Pillow versions
+                    bbox = self.font.getbbox(text)
+                    text_width = bbox[2] - bbox[0]
+                except AttributeError:
+                    # For older Pillow versions
+                    text_width = self.font.getsize(text)[0]
                 right_position = (config.DISPLAY_WIDTH - text_width - position[0], position[1])
                 self.draw.text(right_position, text, font=self.font, fill=fill)
             return True
