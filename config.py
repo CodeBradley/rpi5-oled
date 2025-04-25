@@ -32,13 +32,13 @@ USE_ANTIALIASING = False  # Set to True for smoother text/icons, False for bette
 # Enabled modules (comment out to disable)
 ENABLED_MODULES = [
     'ip_address',
-    #'hostname',
-    #'uptime',
+    'hostname',
+    'uptime',
     #'ssh_status',
     #'docker_status',
-    'cpu_temp',       # Uncomment to show CPU temperature
+    #'cpu_temp',       # Uncomment to show CPU temperature
     # 'memory_usage',   # Uncomment to show RAM usage
-    # 'disk_usage',     # Uncomment to show disk usage
+    #'disk_usage',     # Uncomment to show disk usage
     # 'network_traffic', # Uncomment to show network traffic
 ]
 
