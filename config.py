@@ -25,14 +25,14 @@ POWER_SAVE_MODE = False  # If True, uses inverted display (black background) to 
 
 # Icons and visuals
 ICON_SIZE = (8, 8)  # Size of status icons in pixels
-FONT_SIZE = 12  # Default font size
+FONT_SIZE = 10  # Default font size
 ICON_CACHE_ENABLED = True  # Cache icons in memory to improve performance
 USE_ANTIALIASING = False  # Set to True for smoother text/icons, False for better performance
 
 # Layout and spacing
-LINE_PADDING = 5  # Pixels between lines of text (increased for better readability)
-TOP_MARGIN = 2    # Pixels from top of display to first line
-LEFT_MARGIN = 2   # Pixels from left edge of display
+LINE_PADDING = 4  # Pixels between lines of text (increased for better readability)
+TOP_MARGIN = 0    # Pixels from top of display to first line
+LEFT_MARGIN = 0   # Pixels from left edge of display
 CENTER_CONTENT_VERTICALLY = True  # Center all content vertically on the display
 
 # Font settings
