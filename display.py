@@ -160,33 +160,52 @@ class OLEDDisplay:
                 logging.error(f"Failed to recover display: {recovery_error}")
                 return False
     
-    def draw_text(self, position, text, fill=1, align="left"):
-        """Draw text at the specified position with alignment options."""
+    def draw_text(self, position, text, fill=1, align="left", padding=0):
+        """Draw text at the specified position with alignment options and padding.
+        
+        Args:
+            position: Tuple of (x, y) coordinates
+            text: Text to display
+            fill: Color (1 for white, 0 for black)
+            align: Text alignment ("left", "center", or "right")
+            padding: Additional padding in pixels (for fine-tuning spacing)
+        """
         try:
+            # Apply any additional padding to the y-position
+            padded_position = (position[0], position[1] + padding)
+            
+            # Get font for this text (use custom font size if specified in config)
+            font = self.font
+            if hasattr(config, 'CUSTOM_FONT') and config.CUSTOM_FONT:
+                try:
+                    font = ImageFont.truetype(config.CUSTOM_FONT, config.FONT_SIZE)
+                except Exception as e:
+                    logging.warning(f"Could not load custom font: {e}, using default")
+            
             if align == "left":
-                self.draw.text(position, text, font=self.font, fill=fill)
+                self.draw.text(padded_position, text, font=font, fill=fill)
             elif align == "center":
                 # Calculate width of text for centering
                 try:
                     # For newer Pillow versions
-                    bbox = self.font.getbbox(text)
+                    bbox = font.getbbox(text)
                     text_width = bbox[2] - bbox[0]
                 except AttributeError:
                     # For older Pillow versions
-                    text_width = self.font.getsize(text)[0]
-                centered_position = (position[0] + (config.DISPLAY_WIDTH - text_width) // 2, position[1])
-                self.draw.text(centered_position, text, font=self.font, fill=fill)
+                    text_width = font.getsize(text)[0]
+                centered_position = (padded_position[0] + (config.DISPLAY_WIDTH - text_width) // 2, padded_position[1])
+                self.draw.text(centered_position, text, font=font, fill=fill)
             elif align == "right":
                 # Calculate width of text for right alignment
                 try:
                     # For newer Pillow versions
-                    bbox = self.font.getbbox(text)
+                    bbox = font.getbbox(text)
                     text_width = bbox[2] - bbox[0]
                 except AttributeError:
                     # For older Pillow versions
-                    text_width = self.font.getsize(text)[0]
-                right_position = (config.DISPLAY_WIDTH - text_width - position[0], position[1])
-                self.draw.text(right_position, text, font=self.font, fill=fill)
+                    text_width = font.getsize(text)[0]
+                right_position = (config.DISPLAY_WIDTH - text_width - padded_position[0], padded_position[1])
+                self.draw.text(right_position, text, font=font, fill=fill)
             return True
         except Exception as e:
             logging.error(f"Error drawing text '{text}': {e}")
@@ -246,15 +265,37 @@ class OLEDDisplay:
                 # Clear the display
                 self.clear()
                 
-                # Draw all content
-                y_position = 0
+                # Calculate total content height to allow for vertical centering
+                total_height = 0
                 for content in new_content:
+                    if 'text' in content:
+                        # Each text line needs font height plus padding
+                        total_height += self.font_height + config.LINE_PADDING
+                
+                # Start position - if enabled in config, center content vertically
+                if hasattr(config, 'CENTER_CONTENT_VERTICALLY') and config.CENTER_CONTENT_VERTICALLY:
+                    y_position = max(0, (config.DISPLAY_HEIGHT - total_height) // 2)
+                else:
+                    y_position = config.TOP_MARGIN if hasattr(config, 'TOP_MARGIN') else 0
+                
+                # Draw all content
+                for i, content in enumerate(new_content):
                     if 'text' in content:
                         # Get alignment if specified, default to left
                         align = content.get('align', 'left')
-                        self.draw_text((0, y_position), content['text'], align=align)
-                        # Use calculated font height instead of fixed 8 pixels
-                        y_position += self.font_height + 1  # +1 for spacing
+                        
+                        # Get padding if specified (for fine-tuning spacing)
+                        padding = content.get('padding', 0)
+                        
+                        # Get left margin if specified
+                        left_margin = content.get('left_margin', config.LEFT_MARGIN if hasattr(config, 'LEFT_MARGIN') else 0)
+                        
+                        # Draw text with proper positioning
+                        self.draw_text((left_margin, y_position), content['text'], align=align, padding=padding)
+                        
+                        # Move to next line with proper spacing
+                        line_padding = content.get('line_padding', config.LINE_PADDING if hasattr(config, 'LINE_PADDING') else 3)
+                        y_position += self.font_height + line_padding
                     
                     if 'icon' in content and 'position' in content:
                         self.draw_icon(content['position'], content['icon'])
