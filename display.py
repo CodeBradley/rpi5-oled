@@ -133,7 +133,7 @@ class OLEDDisplay:
     
     def clear(self):
         """Clear the display."""
-        self.draw.rectangle([(0, 0), (config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT)], fill=0)
+        self.draw.rectangle([(0, 0)x, (config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT)], fill=0)
         self.display.clear()
     
     def show(self):
