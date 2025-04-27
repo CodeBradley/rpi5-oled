@@ -126,51 +126,70 @@ class OLEDDisplay:
     
     def create_standard_layout(self) -> Dict[str, GridArea]:
         """
-        Create a standard layout grid with predefined areas.
+        Create a standard layout grid with predefined areas based on mockup specifications.
         
         Returns:
             Dictionary of named grid areas for component placement
         """
         logging.debug("Creating standard layout with dimensions: %dx%d", self.width, self.height)
         
-        # Create main grid layout
+        # Create main grid layout with the exact dimensions of the display
         self.grid = GridLayout(self.width, self.height)
-        logging.debug("Created grid layout with root area: %s", self.grid.root)
         
-        # For a 128x32 display, optimize the layout with these specific proportions
+        # First create a 4-row layout for the main content areas
+        # The first 3 rows are for metrics, last row for hostname/IP
+        rows = self.grid.split_area('root', direction='horizontal', count=4, sizes=[0.25, 0.25, 0.25, 0.25])
+        cpu_row, mem_row, temp_row, info_row = rows
         
-        # Split into top section for metrics and a small section at bottom for hostname/icons
-        # The 128x32 display needs more space for metrics, less for bottom info
-        areas = self.grid.split_area('root', direction='horizontal', sizes=[0.8, 0.2])
-        top, bottom = areas[0], areas[1]
-        logging.debug("Split root into top (%s) and bottom (%s)", top, bottom)
+        # For each metric row, split into (icon | value | service area)
+        # Icon takes about 25%, value 50%, service area 25%
         
-        # Split top into metrics section (wider) and services section (narrower)
-        areas = self.grid.split_area(top.name, direction='vertical', sizes=[0.8, 0.2])
-        metrics_area, services_area = areas[0], areas[1]
-        logging.debug("Split top into metrics (%s) and services (%s)", metrics_area, services_area)
+        # CPU row split
+        cpu_areas = self.grid.split_area(cpu_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
+        cpu_icon_area, cpu_value_area, service_area1 = cpu_areas
         
-        # Split metrics area into even thirds for CPU, memory, temperature
-        areas = self.grid.split_area(metrics_area.name, direction='vertical', count=3, sizes=[0.33, 0.33, 0.34])
-        cpu_col, memory_col, temp_col = areas[0], areas[1], areas[2]
-        logging.debug("Split metrics into cpu (%s), memory (%s), and temperature (%s)", 
-                     cpu_col, memory_col, temp_col)
+        # Memory row split
+        mem_areas = self.grid.split_area(mem_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
+        mem_icon_area, mem_value_area, service_area2 = mem_areas
         
-        # Use the bottom area as a single area for hostname/IP
-        # For a tiny display, we'll put hostname and IP in the same area
-        hostname_area = bottom
-        ip_area = bottom  # Same as hostname for now, to be displayed on same line or alternating
+        # Temperature row split
+        temp_areas = self.grid.split_area(temp_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
+        temp_icon_area, temp_value_area, service_area3 = temp_areas
         
-        # Create areas dictionary
+        # For bottom info row, split into hostname and IP sections
+        info_areas = self.grid.split_area(info_row.name, direction='vertical', count=2, sizes=[0.5, 0.5])
+        hostname_area, ip_area = info_areas
+        
+        # Combine service areas for a unified service column
+        services_area = service_area1  # Primary service area, we'll use this one
+        
+        # Create areas dictionary with proper naming to match the mockup layout
         self.areas = {
             'root': self.grid.root,
-            'top': top,
-            'bottom': bottom,
-            'metrics': metrics_area,
+            
+            # Row areas
+            'cpu_row': cpu_row,
+            'memory_row': mem_row,
+            'temperature_row': temp_row,
+            'info_row': info_row,
+            
+            # Metric icon areas
+            'cpu_icon': cpu_icon_area,
+            'memory_icon': mem_icon_area,
+            'temperature_icon': temp_icon_area,
+            
+            # Metric value areas
+            'cpu_value': cpu_value_area,
+            'memory_value': mem_value_area,
+            'temperature_value': temp_value_area,
+            
+            # Service areas - use service_area1 as the main one
             'services': services_area,
-            'cpu': cpu_col,
-            'memory': memory_col,
-            'temperature': temp_col,
+            'service_area1': service_area1,
+            'service_area2': service_area2,
+            'service_area3': service_area3,
+            
+            # Info areas
             'hostname': hostname_area,
             'ip_address': ip_area
         }

@@ -161,22 +161,32 @@ class OLEDApplication:
                     icon_code=icon_code
                 )
                 
-                # Add the icon container to the icon area
-                icon_area = f"{name}_icon"  # e.g., cpu_icon, memory_icon, etc.
-                self.display.add_container(icon_container, icon_area)
+                # Map metric name to area names defined in display.py
+                area_map = {
+                    'cpu': {'icon': 'cpu_icon', 'value': 'cpu_value'},
+                    'memory': {'icon': 'memory_icon', 'value': 'memory_value'},
+                    'temperature': {'icon': 'temperature_icon', 'value': 'temperature_value'}
+                }
                 
-                # Create the metric container (now just for the value)
-                # We'll hide the icon within the metric container since we have a separate icon container
-                container = MetricContainer(
-                    name=name,
-                    icon_code="",  # Empty icon - we're using separate icon container
-                    provider=provider,
-                    unit=unit
-                )
-                
-                # Add the value container to the value area for this metric
-                value_area = f"{name}_value"  # e.g., cpu_value, memory_value, etc.
-                self.display.add_container(container, value_area)
+                # Get the correct area names for this metric
+                if name in area_map:
+                    icon_area = area_map[name]['icon']
+                    value_area = area_map[name]['value']
+                    
+                    # Add the icon container to the icon area
+                    self.display.add_container(icon_container, icon_area)
+                    
+                    # Create the metric container (now just for the value)
+                    # We'll hide the icon within the metric container since we have a separate icon container
+                    container = MetricContainer(
+                        name=name,
+                        icon_code="",  # Empty icon - we're using separate icon container
+                        provider=provider,
+                        unit=unit
+                    )
+                    
+                    # Add the value container to the value area for this metric
+                    self.display.add_container(container, value_area)
             
             # Set up service container
             service_configs = config.get_services()
@@ -239,7 +249,7 @@ class OLEDApplication:
                 self.display.add_container(ip_container, "ip_address")
             
             logging.info("Containers set up successfully")
-        
+            
         except Exception as e:
             logging.error(f"Failed to set up containers: {e}")
             raise RuntimeError(f"Failed to set up containers: {e}")
