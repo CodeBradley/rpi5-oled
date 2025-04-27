@@ -228,7 +228,8 @@ class OLEDApplication:
                     prefix="IP: "
                 )
                 
-                self.display.add_container(ip_container, "ip_address")
+                # Use 'uptime' area for IP address since there's no dedicated ip_address area
+                self.display.add_container(ip_container, "uptime")
             
             logging.info("Containers set up successfully")
         
