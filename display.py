@@ -137,39 +137,39 @@ class OLEDDisplay:
         self.grid = GridLayout(self.width, self.height)
         logging.debug("Created grid layout with root area: %s", self.grid.root)
         
-        # Split into main sections (header and body)
-        areas = self.grid.split_area('root', direction='horizontal', sizes=[0.2, 0.8])
-        header, body = areas[0], areas[1]
-        logging.debug("Split root into header (%s) and body (%s)", header, body)
+        # Split into top and bottom sections (metrics/services at top, hostname/ip at bottom)
+        areas = self.grid.split_area('root', direction='horizontal', sizes=[0.75, 0.25])
+        top, bottom = areas[0], areas[1]
+        logging.debug("Split root into top (%s) and bottom (%s)", top, bottom)
         
-        # Split header into sections (hostname and uptime)
-        areas = self.grid.split_area(header.name, direction='vertical', sizes=[0.6, 0.4])
-        hostname, uptime = areas[0], areas[1]
-        logging.debug("Split header into hostname (%s) and uptime (%s)", hostname, uptime)
+        # Split top into left and right sections (metrics on left, services on right)
+        areas = self.grid.split_area(top.name, direction='vertical', sizes=[0.75, 0.25])
+        metrics_area, services_area = areas[0], areas[1]
+        logging.debug("Split top into metrics (%s) and services (%s)", metrics_area, services_area)
         
-        # Split body into main sections (metrics and status)
-        areas = self.grid.split_area(body.name, direction='horizontal', sizes=[0.6, 0.4])
-        metrics, status = areas[0], areas[1]
-        logging.debug("Split body into metrics (%s) and status (%s)", metrics, status)
-        
-        # Split metrics into columns (cpu, memory, temperature)
-        areas = self.grid.split_area(metrics.name, direction='vertical', count=3, sizes=[0.33, 0.33, 0.34])
-        cpu_col, mem_col, temp_col = areas[0], areas[1], areas[2]
+        # Split metrics into rows (cpu, memory, temperature)
+        areas = self.grid.split_area(metrics_area.name, direction='horizontal', count=3, sizes=[0.33, 0.33, 0.34])
+        cpu_row, memory_row, temp_row = areas[0], areas[1], areas[2]
         logging.debug("Split metrics into cpu (%s), memory (%s), and temperature (%s)", 
-                     cpu_col, mem_col, temp_col)
+                     cpu_row, memory_row, temp_row)
+        
+        # Split bottom into hostname and IP areas
+        areas = self.grid.split_area(bottom.name, direction='horizontal', count=2, sizes=[0.5, 0.5])
+        hostname_area, ip_area = areas[0], areas[1]
+        logging.debug("Split bottom into hostname (%s) and ip (%s)", hostname_area, ip_area)
         
         # Create areas dictionary
         self.areas = {
             'root': self.grid.root,
-            'header': header,
-            'hostname': hostname,
-            'uptime': uptime,
-            'body': body,
-            'metrics': metrics,
-            'status': status,
-            'cpu': cpu_col,
-            'memory': mem_col,
-            'temperature': temp_col
+            'top': top,
+            'bottom': bottom,
+            'metrics': metrics_area,
+            'services': services_area,
+            'cpu': cpu_row,
+            'memory': memory_row,
+            'temperature': temp_row,
+            'hostname': hostname_area,
+            'ip_address': ip_area
         }
         logging.debug("Created areas dictionary with %d entries: %s", 
                      len(self.areas), list(self.areas.keys()))
@@ -219,7 +219,12 @@ class OLEDDisplay:
         logging.debug("Adding container '%s' to area '%s' (grid name: '%s')", 
                      container.name, area_name, area.name)
         
+        # Set position based on grid area
         container.set_position(area.x, area.y, area.width, area.height)
+        
+        # Enable debug mode to visualize grid boundaries
+        container.debug = True
+        
         self.containers[container.name] = container
     
     def remove_container(self, container_name: str) -> None:

@@ -163,16 +163,9 @@ class OLEDApplication:
                 )
                 
                 # Add the container to the display
-                # Map the container name to the correct area
-                area_mapping = {
-                    'cpu': 'cpu',
-                    'memory': 'memory',
-                    'temperature': 'temperature'
-                }
-                
-                # Place container in its matching area
-                if name in area_mapping:
-                    self.display.add_container(container, area_mapping[name])
+                # Place each metric in its dedicated area
+                # Direct mapping of metric name to grid area name
+                self.display.add_container(container, name)
             
             # Set up service container
             service_configs = config.get_services()
@@ -200,17 +193,17 @@ class OLEDApplication:
                 )
                 
                 # Add the container to the display
-                # Use 'status' area name to match standard layout
-                self.display.add_container(container, "status")
+                # Place service icons in the dedicated services area
+                self.display.add_container(container, "services")
             
-            # Set up divider (placed in the body area since there's no dedicated divider area)
+            # Set up divider between top and bottom sections
             divider = DividerContainer(
                 name="divider",
                 orientation="horizontal"
             )
             
-            # Use 'body' area since we don't have a dedicated divider area
-            self.display.add_container(divider, "body")
+            # Place divider between metrics and hostname at the bottom
+            self.display.add_container(divider, "bottom")
             
             # Set up hostname container
             if config.get('system_info.show_hostname', True):
@@ -237,8 +230,8 @@ class OLEDApplication:
                     prefix="IP: "
                 )
                 
-                # Use 'uptime' area for IP address since there's no dedicated ip_address area
-                self.display.add_container(ip_container, "uptime")
+                # Place IP address in its dedicated area in the bottom section
+                self.display.add_container(ip_container, "ip_address")
             
             logging.info("Containers set up successfully")
         
