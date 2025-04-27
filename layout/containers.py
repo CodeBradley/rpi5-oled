@@ -104,8 +104,8 @@ class MetricContainer(Container):
         self.unit = unit
         self.value = 0
         self.text_color = 1  # White in monochrome display
-        self.icon_size = 8
-        self.value_size = 8
+        self.icon_size = 6
+        self.value_size = 6
     
     def update(self) -> None:
         """Update the metric value from the provider."""
@@ -136,8 +136,8 @@ class MetricContainer(Container):
         icon_font = fonts['small_icon']
         text_font = fonts['small']
         
-        # Calculate vertical position - center in container
-        center_y = self.y + (self.height - self.value_size) // 2
+        # Position elements with minimal spacing
+        center_y = self.y + 1  # Minimal padding
         
         # Format the value
         value = self.value if self.value is not None else 0
@@ -187,7 +187,7 @@ class ServiceIconContainer(Container):
         super().__init__(name)
         self.services = services
         self.statuses = {}
-        self.icon_size = 8
+        self.icon_size = 6
         self.active_color = 1  # White in monochrome display
         self.inactive_color = 0  # Black in monochrome display
         self.icon_spacing = 2

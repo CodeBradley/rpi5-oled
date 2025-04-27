@@ -106,7 +106,7 @@ def load_fonts(icon_size: int = 16, text_size: int = 10) -> Dict[str, ImageFont.
     try:
         # Load the icon font (both normal and small sizes)
         fonts['icon'] = load_icon_font(icon_size)
-        fonts['small_icon'] = load_icon_font(max(6, icon_size // 2))
+        fonts['small_icon'] = load_icon_font(max(5, icon_size // 3))
         
         # Load a regular text font
         fonts['text'] = ImageFont.load_default()
@@ -123,7 +123,7 @@ def load_fonts(icon_size: int = 16, text_size: int = 10) -> Dict[str, ImageFont.
                 try:
                     fonts['text'] = ImageFont.truetype(font_path, text_size)
                     # Also load a smaller version for tiny displays
-                    fonts['small'] = ImageFont.truetype(font_path, max(6, text_size - 2))
+                    fonts['small'] = ImageFont.truetype(font_path, max(5, text_size - 4))
                     break
                 except IOError:
                     continue
