@@ -163,7 +163,10 @@ class OLEDApplication:
                 )
                 
                 # Add the container to the display
-                self.display.add_container(container, f"metric_{i}")
+                # Map index to the correct metric area name
+                metric_areas = ['cpu', 'memory', 'temperature']
+                if i < len(metric_areas):
+                    self.display.add_container(container, metric_areas[i])
             
             # Set up service container
             service_configs = config.get_services()
