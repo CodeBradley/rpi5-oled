@@ -32,7 +32,7 @@ class Container(ABC):
         self.y = 0
         self.width = 0
         self.height = 0
-        self.visible = False
+        self.visible = True  # Make containers visible by default
         self.debug = False
     
     def set_position(self, x: int, y: int, width: int, height: int) -> None:
