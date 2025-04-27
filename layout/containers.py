@@ -329,6 +329,65 @@ class TextContainer(Container):
         draw.text((x, y), display_text, font=text_font, fill=self.text_color)
 
 
+class IconContainer(Container):
+    """
+    Container for displaying an icon from the icon font.
+    
+    This container displays only an icon, useful for metric icons
+    without values.
+    """
+    
+    def __init__(self, name: str, icon_code: str):
+        """
+        Initialize an icon container.
+        
+        Args:
+            name: Unique identifier for this container
+            icon_code: Unicode character code for the icon
+        """
+        super().__init__(name)
+        self.icon_code = icon_code
+        self.icon_size = 6  # Use the size from mockup
+        self.icon_color = 1  # White in monochrome display
+    
+    def update(self) -> None:
+        """Update method, no-op for icons."""
+        pass
+    
+    def render(self, draw, fonts: Dict) -> None:
+        """
+        Render the icon.
+        
+        Args:
+            draw: PIL ImageDraw instance
+            fonts: Dictionary of available fonts
+        """
+        if not self.visible:
+            return
+            
+        super().render(draw, fonts)
+            
+        if 'metric_icon' not in fonts:
+            if 'small_icon' not in fonts:
+                logging.error("Icon font is missing")
+                return
+            icon_font = fonts['small_icon']
+        else:
+            icon_font = fonts['metric_icon']
+        
+        # Center the icon in the container
+        x = self.x + (self.width - self.icon_size) // 2
+        y = self.y + (self.height - self.icon_size) // 2
+        
+        # Draw the icon
+        draw.text(
+            (x, y),
+            self.icon_code,
+            font=icon_font,
+            fill=self.icon_color
+        )
+
+
 class DividerContainer(Container):
     """
     Container for displaying a divider line.

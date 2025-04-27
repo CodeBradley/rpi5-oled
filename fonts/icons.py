@@ -104,26 +104,31 @@ def load_fonts(icon_size: int = 16, text_size: int = 10) -> Dict[str, ImageFont.
     fonts = {}
     
     try:
-        # Load the icon font (both normal and small sizes)
-        fonts['icon'] = load_icon_font(icon_size)
-        fonts['small_icon'] = load_icon_font(max(5, icon_size // 3))
+        # Load fonts with exact sizes from mockup
         
-        # Load a regular text font
-        fonts['text'] = ImageFont.load_default()
+        # Metrics and service icons: 6px height
+        fonts['metric_icon'] = load_icon_font(6)  
+        fonts['service_icon'] = load_icon_font(6)
         
-        # Try to find a better default font if available
+        # Metrics text: 12px (main value)
+        fonts['metric_text'] = ImageFont.load_default()
+        
+        # Hostname/IP: 10px
+        fonts['hostname_text'] = ImageFont.load_default()
+        
+        # Try to find better fonts (Helvetica or alternatives)
         system_fonts = [
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-            '/usr/share/fonts/TTF/DejaVuSans.ttf',
-            '/System/Library/Fonts/Helvetica.ttc'
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux alternative
+            '/usr/share/fonts/TTF/DejaVuSans.ttf',               # Another Linux location
+            '/System/Library/Fonts/Helvetica.ttc'                 # macOS
         ]
         
         for font_path in system_fonts:
             if os.path.exists(font_path):
                 try:
-                    fonts['text'] = ImageFont.truetype(font_path, text_size)
-                    # Also load a smaller version for tiny displays
-                    fonts['small'] = ImageFont.truetype(font_path, max(5, text_size - 4))
+                    # Set exact font sizes from the mockup
+                    fonts['metric_text'] = ImageFont.truetype(font_path, 12)  # 12px for metrics
+                    fonts['hostname_text'] = ImageFont.truetype(font_path, 10)  # 10px for hostname/IP
                     break
                 except IOError:
                     continue

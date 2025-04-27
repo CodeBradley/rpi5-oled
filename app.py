@@ -154,18 +154,28 @@ class OLEDApplication:
                 # Get the icon code
                 icon_code = get_icon_code(icon_name)
                 
-                # Create the container
+                # Create a separate icon container for the metric
+                icon_container = IconContainer(
+                    name=f"{name}_icon",
+                    icon_code=icon_code
+                )
+                
+                # Add the icon container to the icon area
+                icon_area = f"{name}_icon"  # e.g., cpu_icon, memory_icon, etc.
+                self.display.add_container(icon_container, icon_area)
+                
+                # Create the metric container (now just for the value)
+                # We'll hide the icon within the metric container since we have a separate icon container
                 container = MetricContainer(
                     name=name,
-                    icon_code=icon_code,
+                    icon_code="",  # Empty icon - we're using separate icon container
                     provider=provider,
                     unit=unit
                 )
                 
-                # Add the container to the display
-                # Place each metric in its dedicated area
-                # Direct mapping of metric name to grid area name
-                self.display.add_container(container, name)
+                # Add the value container to the value area for this metric
+                value_area = f"{name}_value"  # e.g., cpu_value, memory_value, etc.
+                self.display.add_container(container, value_area)
             
             # Set up service container
             service_configs = config.get_services()
@@ -192,18 +202,12 @@ class OLEDApplication:
                     services=services
                 )
                 
-                # Add the container to the display
-                # Place service icons in the dedicated services area
-                self.display.add_container(container, "services")
+                # Add the service container to the service area in the first row
+                # This is where the icons for running services will be displayed
+                self.display.add_container(container, "service_area1")
             
-            # Set up divider between top and bottom sections
-            divider = DividerContainer(
-                name="divider",
-                orientation="horizontal"
-            )
-            
-            # Place divider between metrics and hostname at the bottom
-            self.display.add_container(divider, "bottom")
+            # We no longer need a divider with the new grid layout
+            # The grid borders will provide visual separation
             
             # Set up hostname container
             if config.get('system_info.show_hostname', True):
