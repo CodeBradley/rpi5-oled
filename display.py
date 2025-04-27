@@ -204,7 +204,16 @@ class OLEDDisplay:
         Raises:
             KeyError: If the area does not exist
         """
-        area = self.grid.get_area(area_name)
+        # First check if area exists in our areas dictionary
+        if area_name not in self.areas:
+            raise KeyError(f"Grid area '{area_name}' does not exist in areas dictionary")
+            
+        # Use the area from our dictionary, not directly from the grid
+        area = self.areas[area_name]
+        
+        logging.debug("Adding container '%s' to area '%s' (grid name: '%s')", 
+                     container.name, area_name, area.name)
+        
         container.set_position(area.x, area.y, area.width, area.height)
         self.containers[container.name] = container
     
