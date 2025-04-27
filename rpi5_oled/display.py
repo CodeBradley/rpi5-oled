@@ -14,9 +14,9 @@ from typing import Dict, List, Tuple, Optional, Any
 from PIL import Image, ImageDraw
 from luma.core.interface.serial import i2c
 from luma.oled.device import ssd1306
-from layout.grid import GridLayout, GridArea
-from layout.containers import Container
-from fonts.icons import load_fonts
+from rpi5_oled.layout.grid import GridLayout, GridArea
+from rpi5_oled.layout.containers import Container
+from rpi5_oled.fonts.icons import load_fonts
 
 
 class OLEDDisplay:

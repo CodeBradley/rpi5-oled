@@ -1,0 +1,56 @@
+# Example configuration file for rpi5-oled
+
+# Display settings
+display:
+  width: 128
+  height: 32
+  i2c_port: 1
+  i2c_address: 0x3C
+  rotation: 0
+  contrast: 255
+  inverted: false
+  update_interval: 5.0  # seconds
+  font_size: 10
+
+# Resource metrics to display (can have up to 3)
+metrics:
+  - name: memory
+    type: memory_usage
+    icon: memory
+    unit: "%"
+  - name: cpu
+    type: cpu_usage
+    icon: cpu
+    unit: "%"
+  - name: temperature
+    type: cpu_temperature
+    icon: temperature
+    unit: "°C"
+
+# Services to monitor
+services:
+  - name: Docker
+    type: docker
+    icon: docker
+  - name: CephFS
+    type: ceph
+    icon: ceph
+  # Example of monitoring a custom service
+  # - name: Custom
+  #   type: systemd
+  #   service_name: my-custom.service
+  #   icon: service
+
+# System information
+system_info:
+  show_hostname: true
+  show_ip: true
+  network_interface: null  # null means auto-detect
+
+# Advanced settings
+advanced:
+  log_level: INFO
+  log_file: /var/log/rpi5-oled.log
+  enable_auto_off: false
+  auto_off_timeout: 300  # seconds of inactivity before turning off display
+  power_save_mode: false
