@@ -32,6 +32,8 @@ class Container(ABC):
         self.y = 0
         self.width = 0
         self.height = 0
+        self.visible = False
+        self.debug = False
     
     def set_position(self, x: int, y: int, width: int, height: int) -> None:
         """
@@ -48,6 +50,14 @@ class Container(ABC):
         self.width = width
         self.height = height
     
+    def show(self) -> None:
+        """Show this container."""
+        self.visible = True
+    
+    def hide(self) -> None:
+        """Hide this container."""
+        self.visible = False
+    
     @abstractmethod
     def render(self, draw, fonts: Dict) -> None:
         """
@@ -57,7 +67,13 @@ class Container(ABC):
             draw: PIL ImageDraw instance
             fonts: Dictionary of available fonts
         """
-        pass
+        # Draw debug rectangle if debug is enabled
+        if self.debug and self.visible:
+            draw.rectangle(
+                [(self.x, self.y), (self.x + self.width, self.y + self.height)],
+                outline=1,
+                width=1
+            )
     
     def __repr__(self) -> str:
         """String representation of the container."""
@@ -107,6 +123,11 @@ class MetricContainer(Container):
             draw: PIL ImageDraw instance
             fonts: Dictionary of available fonts
         """
+        if not self.visible:
+            return
+            
+        super().render(draw, fonts)
+            
         if 'icon' not in fonts or 'text' not in fonts:
             logging.error("Required fonts are missing")
             return
@@ -173,6 +194,11 @@ class ServiceIconContainer(Container):
             draw: PIL ImageDraw instance
             fonts: Dictionary of available fonts
         """
+        if not self.visible:
+            return
+            
+        super().render(draw, fonts)
+            
         if 'icon' not in fonts:
             logging.error("Icon font is missing")
             return
@@ -267,6 +293,11 @@ class TextContainer(Container):
             draw: PIL ImageDraw instance
             fonts: Dictionary of available fonts
         """
+        if not self.visible:
+            return
+            
+        super().render(draw, fonts)
+            
         if 'text' not in fonts:
             logging.error("Text font is missing")
             return
@@ -320,6 +351,11 @@ class DividerContainer(Container):
             draw: PIL ImageDraw instance
             fonts: Dictionary of available fonts (not used)
         """
+        if not self.visible:
+            return
+            
+        super().render(draw, fonts)
+            
         if self.orientation == "horizontal":
             # Center the line vertically
             y = self.y + self.height // 2

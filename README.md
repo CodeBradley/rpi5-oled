@@ -1,152 +1,216 @@
-# Raspberry Pi 5 OLED Display Framework
+# RPi5 OLED Framework
 
-A modular, grid-based layout system for OLED displays on Raspberry Pi 5, designed for displaying system metrics, service statuses, and network information.
+A modular, grid-based layout system for Raspberry Pi OLED displays, showing resource utilization metrics, service statuses, and network information.
 
 ## Features
 
-- **Grid Layout System**: CSS-grid inspired layout framework for organizing display content
-- **Modular Architecture**: Easily add or remove components without modifying core code
-- **Metrics Display**: Show CPU usage, memory usage, temperature, and more
-- **Service Status**: Monitor Docker, CephFS, and other services with icon indicators
-- **Network Information**: Display hostname and IP address
-- **Icon Font Support**: Uses custom BoxIcons font for scalable, low-memory icons
-- **Flexible Configuration**: YAML or JSON configuration files
+- Grid-based layout system (CSS Grid-like)
+- Modular architecture with pluggable components
+- System resource monitoring (CPU, RAM, temperature)
+- Network status information
+- Service status indicators
+- Hardware connectivity checks
+- Systemd service integration
+- Custom icon support using Boxicons
 
-## Architecture
+## Supported Hardware
 
-The framework is designed with modularity and separation of concerns in mind:
+- Raspberry Pi 5 (compatible with 3/4 as well)
+- 0.91" OLED display (128x32 pixels) via I2C
+- SSD1306 display controller
+
+## Project Structure
 
 ```
-rpi5_oled/
-  - layout/
-    - grid.py       # Grid layout system
-    - containers.py # Container types (metrics, services, text)
-  - providers/
-    - system.py     # System metrics (CPU, RAM, temp)
-    - services.py   # Service status (Docker, CephFS)
-    - network.py    # Network info (hostname, IP)
-  - fonts/
-    - icons.py      # Icon utilities and mappings
-  - display.py      # OLED hardware controller
-  - config.py       # Configuration management
-  - app.py          # Main application
+rpi5-oled/
+├── app.py              # Main entry point
+├── config.py           # Configuration handling
+├── display.py          # Display controller
+├── layout/             # Layout system
+│   ├── grid.py         # Grid layout framework
+│   └── containers.py   # UI components
+├── providers/          # Data providers
+│   ├── system.py       # System metrics (CPU, RAM, temp)
+│   ├── services.py     # Service status (Docker, CephFS)
+│   └── network.py      # Network info (hostname, IP)
+├── utils/              # Utility functions
+│   └── hardware.py     # Hardware checks and utilities
+├── fonts/              # Font resources
+│   └── lakenet-boxicons.ttf  # Custom icon font
+└── tests/              # Unit tests
 ```
-
-## Hardware Requirements
-
-- Raspberry Pi 5 (works with Pi 3/4 as well)
-- 0.91" I2C OLED Display (128x32 pixels)
-- Connections: SDA, SCL, VCC, GND
 
 ## Installation
 
-### Method 1: Install from pip
+### Quick Install
+
+The easiest way to install is by using our deployment script, which pulls directly from GitHub:
 
 ```bash
-pip install rpi5-oled
+# One-line install (pulls latest code and sets up service)
+curl -sSL https://raw.githubusercontent.com/CodeBradley/rpi5-oled/framework/deploy.sh | sudo bash
 ```
 
-### Method 2: Install from source
+### Manual Installation
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/CodeBradley/rpi5-oled.git
-   cd rpi5-oled
-   ```
+If you prefer more control over the installation:
 
-2. Install in development mode:
-   ```bash
-   pip install -e .
-   ```
+```bash
+# Clone the repository
+git clone -b framework https://github.com/CodeBradley/rpi5-oled.git
+cd rpi5-oled
 
-3. Set up as a systemd service:
-   ```bash
-   sudo cp examples/rpi5-oled.service /etc/systemd/system/
-   sudo systemctl enable rpi5-oled.service
-   sudo systemctl start rpi5-oled.service
-   ```
+# Run the deployment script
+sudo ./deploy.sh
+```
+
+The deployment script will:
+1. Install necessary system dependencies
+2. Enable the I2C interface if needed
+3. Install Python dependencies
+4. Set up the systemd service
+5. Create a default configuration
+6. Run a hardware check
 
 ## Configuration
 
-The framework uses YAML or JSON configuration files. Create a configuration file at `/etc/rpi5-oled/config.yaml` or specify a custom path with the `-c` flag.
+The framework uses a YAML configuration file at `/etc/rpi5-oled/config.yaml`.
 
-## Wiring
+Example configuration:
 
-Connect your OLED display to the Raspberry Pi as follows:
+```yaml
+# Display settings
+display:
+  width: 128
+  height: 32
+  i2c_port: 1
+  i2c_address: 0x3C
+  rotation: 0
+  contrast: 255
+  inverted: false
+
+# Update interval in seconds
+update_interval: 5
+
+# Enabled modules
+enabled_modules:
+  - system_metrics
+  - network_info
+  - service_status
+```
+
+## Hardware Setup
+
+Connect your OLED display to the Raspberry Pi:
 
 - VCC → 3.3V
 - GND → Ground
-- SDA → GPIO 2 (SDA)
-- SCL → GPIO 3 (SCL)
+- SDA → GPIO 2 (I2C1 SDA)
+- SCL → GPIO 3 (I2C1 SCL)
+
+Make sure I2C is enabled on your Raspberry Pi:
+
+```bash
+sudo raspi-config
+```
+
+Navigate to: Interface Options > I2C > Enable
 
 ## Usage
 
-### Command Line
+### Managing the Service
 
 ```bash
-# Run with default configuration
-rpi5-oled
+# Start the service
+sudo systemctl start rpi5-oled
 
-# Specify a configuration file
-rpi5-oled -c /path/to/config.yaml
-
-# Enable verbose logging
-rpi5-oled -v
-
-# Reset the display before starting
-rpi5-oled -r
-```
-
-### As a systemd service
-
-```bash
-# Start, stop, or restart the service
-sudo systemctl start rpi5-oled.service
-sudo systemctl stop rpi5-oled.service
-sudo systemctl restart rpi5-oled.service
+# Check status
+sudo systemctl status rpi5-oled
 
 # View logs
-sudo journalctl -u rpi5-oled.service
+sudo journalctl -u rpi5-oled -f
+
+# Stop the service
+sudo systemctl stop rpi5-oled
+```
+
+### Hardware Verification
+
+To check if your hardware is properly connected:
+
+```bash
+cd /usr/local/lib/rpi5-oled
+sudo python3 app.py --check-only
+```
+
+### Development Mode
+
+For testing without hardware (ignores hardware check failures):
+
+```bash
+python3 app.py --force
+```
+
+## Development
+
+### Setting Up a Development Environment
+
+```bash
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies for development
+pip install -r requirements.txt
+pip install pytest pillow pyyaml psutil
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Run specific test files
+python -m pytest tests/test_grid.py
+python -m pytest tests/test_containers.py
 ```
 
 ## Extending the Framework
 
 ### Adding a New Metric
 
-To add a custom metric, create a new provider function in `system.py` and register it in the configuration:
+To add a custom metric, implement a provider function in `providers/system.py`:
 
 ```python
-# In providers/system.py
 def get_custom_metric():
-    # Your implementation here
+    # Implementation logic
     return value
-
-# Register in get_metric_provider function
-def get_metric_provider(metric_type):
-    metric_types = {
-        # ... existing metrics
-        'custom_metric': get_custom_metric,
-    }
-```
-
-### Adding a New Service
-
-To monitor a new service, add a provider function in `services.py`:
-
-```python
-# In providers/services.py
-def check_custom_service():
-    # Your implementation here
-    return True  # or False if service is down
-
-# Register in get_service_provider function
-def get_service_provider(service_type):
-    service_types = {
-        # ... existing services
-        'custom_service': check_custom_service,
-    }
 ```
 
 ### Creating a Custom Container
 
-Extend the `Container` class in `containers.py` to create a new type of display element.
+Extend the base Container class in `layout/containers.py`:
+
+```python
+class CustomContainer(Container):
+    def __init__(self, position, size, custom_param):
+        super().__init__(position, size)
+        self.custom_param = custom_param
+        
+    def render(self, draw, fonts):
+        # Custom rendering logic
+        pass
+        
+    def update(self):
+        # Update container state
+        pass
+```
+
+## License
+
+MIT License
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.

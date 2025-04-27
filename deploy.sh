@@ -1,115 +1,105 @@
 #!/bin/bash
-# deploy.sh - Script to deploy the OLED display application to a Raspberry Pi using GitHub
-# Usage: ./deploy.sh [hostname]
+# Deployment script for the Raspberry Pi 5 OLED Display Framework
+# This script clones the repo, installs dependencies, and sets up the systemd service
 
-# Exit on error
-set -e
+set -e  # Exit on error
 
-# Function to log messages with timestamps
-log_message() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
+# Configuration
+REPO_URL="https://github.com/CodeBradley/rpi5-oled.git"
+BRANCH="framework"  # Change this to your target branch (main, master, framework, etc.)
+INSTALL_DIR="/usr/local/lib/rpi5-oled"
+CONFIG_DIR="/etc/rpi5-oled"
+SERVICE_FILE="/etc/systemd/system/rpi5-oled.service"
 
-# Default hostname if not provided
-HOST=${1:-boron}
-REMOTE_USER="brad"
-APP_DIR="/home/brad/rpi5-oled"
-SERVICE_NAME="rpi5-oled"
-GITHUB_REPO="https://github.com/CodeBradley/rpi5-oled.git"
-CURRENT_BRANCH=$(git branch --show-current)
-
-log_message "Deploying to $HOST from branch $CURRENT_BRANCH..."
-
-# First, commit and push any local changes to GitHub if there are changes
-log_message "Checking for local changes..."
-if ! git diff-index --quiet HEAD; then
-  log_message "Changes detected, committing and pushing..."
-  git add .
-  git commit -m "Update: $(date +'%Y-%m-%d %H:%M:%S')"
-  git push origin $CURRENT_BRANCH
-else
-  log_message "No local changes to commit."
-fi
-
-# Check if the repository exists on the Pi
-log_message "Checking repository on $HOST..."
-ssh $REMOTE_USER@$HOST "if [ ! -d $APP_DIR/.git ]; then \
-  echo 'Cloning repository for the first time...'; \
-  git clone $GITHUB_REPO $APP_DIR; \
-  cd $APP_DIR && git checkout $CURRENT_BRANCH; \
- else \
-  echo 'Updating existing repository...'; \
-  cd $APP_DIR && git fetch && git checkout $CURRENT_BRANCH && git pull; \
-fi"
-
-# Copy the service file only if it doesn't exist or has changed
-log_message "Checking service file..."
-LOCAL_SERVICE_HASH=$(md5sum $SERVICE_NAME.service | awk '{print $1}')
-REMOTE_SERVICE_HASH=$(ssh $REMOTE_USER@$HOST "if [ -f /etc/systemd/system/$SERVICE_NAME.service ]; then md5sum /etc/systemd/system/$SERVICE_NAME.service | awk '{print \$1}'; else echo 'not_found'; fi")
-
-if [ "$LOCAL_SERVICE_HASH" != "$REMOTE_SERVICE_HASH" ]; then
-  log_message "Service file changed or not found, copying..."
-  scp $SERVICE_NAME.service $REMOTE_USER@$HOST:/tmp/
-  ssh $REMOTE_USER@$HOST "sudo mv /tmp/$SERVICE_NAME.service /etc/systemd/system/"
-else
-  log_message "Service file unchanged, skipping copy."
-fi
-
-# Install system dependencies
-log_message "Installing system dependencies..."
-ssh $REMOTE_USER@$HOST "sudo apt update && sudo apt install -y python3-pip python3-venv python3-dev i2c-tools python3-smbus python3-rpi.gpio python3-pil libfreetype6-dev libjpeg-dev"
-
-# Set up virtual environment only if it doesn't exist
-log_message "Checking virtual environment..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && [ -d venv ] || python3 -m venv venv"
-
-# Install Python dependencies from requirements.txt in the virtual environment
-log_message "Installing Python dependencies..."
-ssh $REMOTE_USER@$HOST "cd $APP_DIR && \
-  source venv/bin/activate && \
-  if [ -f requirements.txt ]; then \
-    pip3 install -r requirements.txt; \
-  else \
-    pip3 install RPi.GPIO luma.oled psutil docker; \
-  fi"
-
-# Create icons directory and copy icons if needed
-log_message "Setting up icons..."
-ssh $REMOTE_USER@$HOST "mkdir -p $APP_DIR/icons"
-
-# Copy the icon files (only copy if they don't exist or have changed)
-log_message "Copying icon files..."
-for icon in icons/*.png; do
-  if [ -f "$icon" ]; then
-    ICON_NAME=$(basename "$icon")
-    LOCAL_ICON_HASH=$(md5sum "$icon" | awk '{print $1}')
-    REMOTE_ICON_HASH=$(ssh $REMOTE_USER@$HOST "if [ -f $APP_DIR/icons/$ICON_NAME ]; then md5sum $APP_DIR/icons/$ICON_NAME | awk '{print \$1}'; else echo 'not_found'; fi")
-    
-    if [ "$LOCAL_ICON_HASH" != "$REMOTE_ICON_HASH" ]; then
-      log_message "Copying updated icon: $ICON_NAME"
-      scp "$icon" $REMOTE_USER@$HOST:$APP_DIR/icons/
-    fi
-  fi
-done
-
-# Reload systemd and restart the service
-log_message "Restarting service..."
-ssh $REMOTE_USER@$HOST "sudo systemctl daemon-reload && sudo systemctl restart $SERVICE_NAME"
-
-# Check service status
-log_message "Service status:"
-ssh $REMOTE_USER@$HOST "sudo systemctl status $SERVICE_NAME --no-pager"
-
-# View detailed logs
-log_message "Detailed logs:"
-ssh $REMOTE_USER@$HOST "sudo journalctl -u $SERVICE_NAME -n 20 --no-pager"
-
-log_message "Deployment complete!"
-
-# Check for any errors during deployment
-if [ $? -eq 0 ]; then
-  log_message "Deployment successful!"
-else
-  log_message "Deployment encountered errors. Please check the logs above."
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root (use sudo)"
   exit 1
 fi
+
+# Check for required tools
+if ! command -v git &> /dev/null; then
+  echo "Git is not installed. Installing..."
+  apt-get update
+  apt-get install -y git
+fi
+
+if ! command -v pip3 &> /dev/null; then
+  echo "pip3 is not installed. Installing..."
+  apt-get update
+  apt-get install -y python3-pip
+fi
+
+# Create config directory
+echo "Creating configuration directory..."
+mkdir -p $CONFIG_DIR
+
+# Remove old installation if it exists
+if [ -d "$INSTALL_DIR" ]; then
+  echo "Removing previous installation..."
+  rm -rf $INSTALL_DIR
+fi
+
+# Clone the repository
+echo "Cloning repository from $REPO_URL (branch: $BRANCH)..."
+git clone -b $BRANCH $REPO_URL $INSTALL_DIR
+
+cd $INSTALL_DIR
+
+# Create default config if it doesn't exist
+if [ ! -f "$CONFIG_DIR/config.yaml" ]; then
+  echo "Creating default configuration..."
+  cat > $CONFIG_DIR/config.yaml << EOF
+# Raspberry Pi 5 OLED Display Framework Configuration
+
+# Display settings
+display:
+  width: 128
+  height: 32
+  i2c_port: 1
+  i2c_address: 0x3C
+  rotation: 0
+  contrast: 255
+  inverted: false
+
+# Update interval in seconds
+update_interval: 5
+
+# Enabled modules
+enabled_modules:
+  - system_metrics
+  - network_info
+  - service_status
+EOF
+fi
+
+# Check for I2C and install if missing
+if ! lsmod | grep -q i2c_bcm; then
+  echo "Enabling I2C interface..."
+  raspi-config nonint do_i2c 0
+fi
+
+# Install Python dependencies
+echo "Installing Python dependencies..."
+pip3 install -r requirements.txt
+
+# Install luma.oled and other hardware-specific packages
+echo "Installing hardware-specific packages..."
+apt-get install -y python3-dev python3-pip libfreetype6-dev libjpeg-dev libopenjp2-7 libtiff5
+pip3 install luma.oled RPi.GPIO
+
+# Install systemd service
+echo "Installing systemd service..."
+cp rpi5-oled.service $SERVICE_FILE
+systemctl daemon-reload
+systemctl enable rpi5-oled.service
+
+# Run hardware check (without forcing)
+echo "Running hardware check..."
+python3 app.py --check-only
+
+echo ""
+echo "Installation complete!"
+echo "To start the service, run: sudo systemctl start rpi5-oled"
+echo "To check status, run: sudo systemctl status rpi5-oled"
+echo "To view logs, run: sudo journalctl -u rpi5-oled -f"

@@ -138,10 +138,10 @@ class OLEDDisplay:
         
         Args:
             container: Container to add
-            area_name: Name of the grid area to place the container
-            
+            area_name: Name of the grid area to place the container in
+        
         Raises:
-            KeyError: If the grid area does not exist
+            KeyError: If the area does not exist
         """
         area = self.layout.get_area(area_name)
         container.set_position(area.x, area.y, area.width, area.height)
@@ -149,38 +149,89 @@ class OLEDDisplay:
     
     def remove_container(self, container_name: str) -> None:
         """
-        Remove a container.
+        Remove a container from the display.
         
         Args:
             container_name: Name of the container to remove
-            
-        Raises:
-            KeyError: If the container does not exist
         """
         if container_name in self.containers:
             del self.containers[container_name]
     
     def update_containers(self) -> None:
-        """Update all containers' content."""
+        """Update all containers with fresh data."""
         for container in self.containers.values():
             container.update()
     
-    def render(self) -> None:
+    def render_containers(self) -> None:
         """Render all containers to the display buffer."""
-        self.clear()
-        
         for container in self.containers.values():
             container.render(self.draw, self.fonts)
-        
-        self.show()
     
-    def update(self) -> None:
-        """Update container content and render the display."""
-        self.update_containers()
-        self.render()
+    def update_display(self, force: bool = False) -> bool:
+        """
+        Update the display with the current container data.
+        
+        Args:
+            force: Whether to force an update even if no data has changed
+        
+        Returns:
+            True if the display was updated, False otherwise
+        """
+        try:
+            # Update container data
+            self.update_containers()
+            
+            # Clear the display buffer
+            self.clear()
+            
+            # Render containers to buffer
+            self.render_containers()
+            
+            # Update physical display
+            self.show()
+            
+            return True
+        
+        except Exception as e:
+            logging.error(f"Error in update_display: {e}")
+            return False
+    
+    def draw_text(self, position: Tuple[int, int], text: str, 
+                  font_name: str = 'text', fill: int = 1) -> None:
+        """
+        Draw text at the specified position.
+        
+        Args:
+            position: (x, y) coordinates
+            text: Text to draw
+            font_name: Name of font to use
+            fill: Fill color (1 for white, 0 for black)
+        """
+        if font_name not in self.fonts:
+            logging.warning(f"Font '{font_name}' not found, using default text font")
+            font_name = 'text'
+        
+        self.draw.text(position, text, font=self.fonts[font_name], fill=fill)
+    
+    def draw_icon(self, position: Tuple[int, int], icon_code: str, 
+                 font_name: str = 'icon', fill: int = 1) -> None:
+        """
+        Draw an icon at the specified position.
+        
+        Args:
+            position: (x, y) coordinates
+            icon_code: Unicode character code for the icon
+            font_name: Name of font to use
+            fill: Fill color (1 for white, 0 for black)
+        """
+        if font_name not in self.fonts:
+            logging.warning(f"Font '{font_name}' not found, using default icon font")
+            font_name = 'icon'
+        
+        self.draw.text(position, icon_code, font=self.fonts[font_name], fill=fill)
     
     def turn_off(self) -> None:
-        """Turn off the display."""
+        """Turn off the display (power saving)."""
         if self.is_on:
             try:
                 self.device.hide()
@@ -199,132 +250,12 @@ class OLEDDisplay:
             except Exception as e:
                 logging.error(f"Error turning on display: {e}")
     
-    def set_contrast(self, contrast: int) -> None:
-        """
-        Set display contrast.
-        
-        Args:
-            contrast: Contrast value (0-255)
-        """
-        if 0 <= contrast <= 255:
-            try:
-                self.device.contrast(contrast)
-                self.contrast = contrast
-            except Exception as e:
-                logging.error(f"Error setting contrast: {e}")
-    
-    def set_inverted(self, inverted: bool) -> None:
-        """
-        Set display inversion mode.
-        
-        Args:
-            inverted: Whether to invert display colors
-        """
-        try:
-            self.device.invert(inverted)
-            self.inverted = inverted
-        except Exception as e:
-            logging.error(f"Error setting inversion mode: {e}")
-    
     def cleanup(self) -> None:
-        """Clean up resources and turn off the display."""
+        """Clean up resources before shutdown."""
         try:
+            # Clear display before shutdown
             self.clear()
             self.show()
-            self.device.cleanup()
-            logging.info("Display cleaned up")
+            logging.info("Display cleaned up for shutdown")
         except Exception as e:
-            logging.error(f"Error cleaning up display: {e}")
-    
-    def reset(self) -> None:
-        """Reset the display by reinitializing it."""
-        try:
-            self.cleanup()
-            self._initialize_display()
-            logging.info("Display reset")
-        except Exception as e:
-            logging.error(f"Error resetting display: {e}")
-            raise RuntimeError(f"Failed to reset display: {e}")
-    
-    def create_standard_layout(self) -> Dict[str, GridArea]:
-        """
-        Create a standard layout for the OLED display.
-        
-        This creates a layout with areas for:
-        - Top row with 3 metrics
-        - Service icons
-        - Divider
-        - Hostname
-        - IP address
-        
-        Returns:
-            Dictionary of created grid areas
-        """
-        # Split the display into 3 main vertical sections
-        main_areas = self.layout.split_area(
-            "root", 
-            direction="vertical", 
-            count=3, 
-            sizes=[0.4, 0.1, 0.5]  # 40% top, 10% divider, 50% bottom
-        )
-        
-        # Name the main areas
-        metrics_area = main_areas[0]
-        metrics_area.name = "metrics"
-        
-        divider_area = main_areas[1]
-        divider_area.name = "divider"
-        
-        info_area = main_areas[2]
-        info_area.name = "info"
-        
-        # Add areas to the layout
-        self.layout.areas["metrics"] = metrics_area
-        self.layout.areas["divider"] = divider_area
-        self.layout.areas["info"] = info_area
-        
-        # Split metrics area into metrics and services
-        metrics_split = self.layout.split_area(
-            "metrics", 
-            direction="horizontal", 
-            count=2, 
-            sizes=[0.6, 0.4]  # 60% metrics, 40% services
-        )
-        
-        resource_metrics = metrics_split[0]
-        resource_metrics.name = "resource_metrics"
-        
-        services = metrics_split[1]
-        services.name = "services"
-        
-        self.layout.areas["resource_metrics"] = resource_metrics
-        self.layout.areas["services"] = services
-        
-        # Create 3 equal metric sections in the resource_metrics area
-        metrics_grid = self.layout.split_area(
-            "resource_metrics", 
-            direction="horizontal", 
-            count=3
-        )
-        
-        for i, metric in enumerate(metrics_grid):
-            metric.name = f"metric_{i}"
-            self.layout.areas[metric.name] = metric
-        
-        # Split info area into hostname and IP address
-        info_split = self.layout.split_area(
-            "info", 
-            direction="vertical", 
-            count=2
-        )
-        
-        hostname = info_split[0]
-        hostname.name = "hostname"
-        
-        ip_address = info_split[1]
-        ip_address.name = "ip_address"
-        
-        self.layout.areas["hostname"] = hostname
-        self.layout.areas["ip_address"] = ip_address
-        
-        return self.layout.areas
+            logging.error(f"Error during display cleanup: {e}")

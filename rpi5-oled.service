@@ -3,14 +3,16 @@ Description=Raspberry Pi 5 OLED Display Framework
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/rpi5-oled
-# Alternatively, use python -m rpi5_oled.app if installed in dev mode
-# ExecStart=/usr/bin/python3 -m rpi5_oled.app -c /etc/rpi5-oled/config.yaml
+ExecStart=/usr/bin/python3 /usr/local/lib/rpi5-oled/app.py
+# Alternatively, use python -m app if installed in dev mode
+# ExecStart=/usr/bin/python3 -m app -c /etc/rpi5-oled/config.yaml
 StandardOutput=journal
 StandardError=journal
 Restart=always
 # Run as root to access GPIO pins and I2C bus
 User=root
+# Working directory
+WorkingDirectory=/usr/local/lib/rpi5-oled
 
 [Install]
 WantedBy=multi-user.target

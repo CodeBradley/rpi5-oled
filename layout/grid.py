@@ -115,6 +115,9 @@ class GridLayout:
         
         # Create the root area covering the entire display
         self.root = GridArea("root", (0, 0, width, height))
+        
+        # Add the root area to the areas dictionary
+        self.areas["root"] = self.root
     
     def add_area(self, name: str, rect: Rect, parent: Optional[str] = None) -> GridArea:
         """

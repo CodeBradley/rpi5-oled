@@ -13,7 +13,7 @@ class TestGridArea(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures."""
-        self.area = GridArea(0, 0, 100, 50, "test_area")
+        self.area = GridArea("test_area", (0, 0, 100, 50))
     
     def test_initialization(self):
         """Test GridArea initialization."""
@@ -25,23 +25,23 @@ class TestGridArea(unittest.TestCase):
         
     def test_position(self):
         """Test area position properties."""
-        self.assertEqual(self.area.left, 0)
-        self.assertEqual(self.area.top, 0)
-        self.assertEqual(self.area.right, 100)
-        self.assertEqual(self.area.bottom, 50)
+        self.assertEqual(self.area.x, 0)
+        self.assertEqual(self.area.y, 0)
+        self.assertEqual(self.area.x + self.area.width, 100)
+        self.assertEqual(self.area.y + self.area.height, 50)
         
     def test_center(self):
         """Test area center calculation."""
-        self.assertEqual(self.area.center_x, 50)
-        self.assertEqual(self.area.center_y, 25)
+        self.assertEqual(self.area.x + self.area.width // 2, 50)
+        self.assertEqual(self.area.y + self.area.height // 2, 25)
         
     def test_size(self):
         """Test area size calculation."""
-        self.assertEqual(self.area.size, (100, 50))
+        self.assertEqual((self.area.width, self.area.height), (100, 50))
         
     def test_position_tuple(self):
         """Test position tuple property."""
-        self.assertEqual(self.area.position, (0, 0))
+        self.assertEqual((self.area.x, self.area.y), (0, 0))
         
     def test_contains_point(self):
         """Test contains_point method."""
@@ -53,7 +53,7 @@ class TestGridArea(unittest.TestCase):
         
     def test_repr(self):
         """Test string representation."""
-        expected = "GridArea(name='test_area', x=0, y=0, width=100, height=50)"
+        expected = "GridArea('test_area', (0, 0, 100, 50))"
         self.assertEqual(repr(self.area), expected)
 
 
@@ -74,10 +74,10 @@ class TestGridLayout(unittest.TestCase):
     
     def test_add_area(self):
         """Test adding an area to the layout."""
-        new_area = GridArea(10, 10, 50, 30, "test_area")
-        self.layout.add_area(new_area)
+        rect = (10, 10, 50, 30)
+        self.layout.add_area("test_area", rect)
         self.assertIn("test_area", self.layout.areas)
-        self.assertEqual(self.layout.areas["test_area"], new_area)
+        self.assertEqual(self.layout.areas["test_area"].rect, rect)
     
     def test_get_area(self):
         """Test getting an area from the layout."""
@@ -122,14 +122,12 @@ class TestGridLayout(unittest.TestCase):
         # First split horizontally
         h_areas = self.layout.split_area("root", "horizontal", 2)
         
-        # Name the areas
-        h_areas[0].name = "left"
-        h_areas[1].name = "right"
-        self.layout.areas["left"] = h_areas[0]
-        self.layout.areas["right"] = h_areas[1]
+        # The areas are already named by the split_area method
+        left_area = self.layout.get_area("root_0")
+        right_area = self.layout.get_area("root_1")
         
         # Split left area vertically
-        v_areas = self.layout.split_area("left", "vertical", 2)
+        v_areas = self.layout.split_area("root_0", "vertical", 2)
         self.assertEqual(len(v_areas), 2)
         self.assertEqual(v_areas[0].width, 100)
         self.assertEqual(v_areas[0].height, 50)
