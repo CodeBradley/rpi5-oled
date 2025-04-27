@@ -154,12 +154,13 @@ class MetricContainer(Container):
         text_x = self.x + (self.width - text_width) // 2
         text_y = self.y + (self.height // 2) - 2  # Position in center
         
-        # Center icon above the value
+        # For icon placement, position it slightly higher
         icon_width = icon_font.getsize(self.icon_code)[0] if hasattr(icon_font, 'getsize') else 0
-        icon_x = self.x + (self.width - icon_width) // 2  
-        icon_y = self.y + 2  # Small padding from top
+        icon_x = self.x + (self.width - icon_width) // 2
+        # Position icon in top third of the container
+        icon_y = self.y + (self.height // 3) - 6
         
-        # Draw the icon centered above the value
+        # Draw the icon centered in upper part
         draw.text(
             (icon_x, icon_y),
             self.icon_code,
@@ -167,11 +168,12 @@ class MetricContainer(Container):
             fill=self.text_color
         )
         
-        # Draw the value centered below the icon
+        # Position value text in bottom half of container
+        # This creates more space between icon and value
         draw.text(
-            (text_x, text_y),
+            (text_x, text_y + 2),  # Move text down slightly
             value_text,
-            font=text_font,
+            font=text_font, 
             fill=self.text_color
         )
 

@@ -137,8 +137,8 @@ class OLEDDisplay:
         self.grid = GridLayout(self.width, self.height)
         
         # First split into metrics and info sections (top and bottom)
-        # Metrics get 80% of height, info gets 20%
-        main_areas = self.grid.split_area('root', direction='horizontal', sizes=[0.8, 0.2])
+        # Give metrics more space - 85% of height, info just 15%
+        main_areas = self.grid.split_area('root', direction='horizontal', sizes=[0.85, 0.15])
         metrics_area, info_area = main_areas
         
         # Split metrics area into 3 equal columns for CPU, memory, and temperature
@@ -211,8 +211,10 @@ class OLEDDisplay:
         # Set position based on grid area
         container.set_position(area.x, area.y, area.width, area.height)
         
-        # Enable debug mode to visualize grid boundaries
-        container.debug = True
+        # For debugging, enable to see grid outlines
+        container.debug = False  # Hide container bounds for clean display
+        
+        logging.debug(f"Added container '{container.name}' to area '{area_name}', position: {area.x},{area.y} size: {area.width}x{area.height}")
         
         self.containers[container.name] = container
     
