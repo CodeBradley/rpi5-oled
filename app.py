@@ -163,10 +163,16 @@ class OLEDApplication:
                 )
                 
                 # Add the container to the display
-                # Map index to the correct metric area name
-                metric_areas = ['cpu', 'memory', 'temperature']
-                if i < len(metric_areas):
-                    self.display.add_container(container, metric_areas[i])
+                # Map the container name to the correct area
+                area_mapping = {
+                    'cpu': 'cpu',
+                    'memory': 'memory',
+                    'temperature': 'temperature'
+                }
+                
+                # Place container in its matching area
+                if name in area_mapping:
+                    self.display.add_container(container, area_mapping[name])
             
             # Set up service container
             service_configs = config.get_services()
@@ -219,8 +225,11 @@ class OLEDApplication:
             
             # Set up IP address container
             if config.get('system_info.show_ip', True):
-                interface = config.get('system_info.network_interface')
-                ip_provider = lambda: get_network_info_provider('ip_address')(interface=interface)
+                # Network interface to use (or None for default)
+                interface = config.get('network.interface', None)
+                
+                # Get provider function with interface in kwargs
+                ip_provider = get_network_info_provider('ip_address', interface=interface)
                 
                 ip_container = TextContainer(
                     name="ip_address",
