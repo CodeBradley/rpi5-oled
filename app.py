@@ -18,7 +18,8 @@ from typing import Dict, List, Optional, Any, Tuple
 from config import config, load_config, configure_logging
 from display import OLEDDisplay
 from layout.containers import (
-    MetricContainer, ServiceIconContainer, TextContainer, DividerContainer
+    MetricContainer, ServiceIconContainer, TextContainer, DividerContainer,
+    IconContainer
 )
 from providers.system import get_metric_provider
 from providers.services import get_service_provider
