@@ -137,26 +137,29 @@ class OLEDDisplay:
         self.grid = GridLayout(self.width, self.height)
         logging.debug("Created grid layout with root area: %s", self.grid.root)
         
-        # Split into top and bottom sections (metrics/services at top, hostname/ip at bottom)
-        areas = self.grid.split_area('root', direction='horizontal', sizes=[0.75, 0.25])
+        # For a 128x32 display, optimize the layout with these specific proportions
+        
+        # Split into top section for metrics and a small section at bottom for hostname/icons
+        # The 128x32 display needs more space for metrics, less for bottom info
+        areas = self.grid.split_area('root', direction='horizontal', sizes=[0.8, 0.2])
         top, bottom = areas[0], areas[1]
         logging.debug("Split root into top (%s) and bottom (%s)", top, bottom)
         
-        # Split top into left and right sections (metrics on left, services on right)
-        areas = self.grid.split_area(top.name, direction='vertical', sizes=[0.75, 0.25])
+        # Split top into metrics section (wider) and services section (narrower)
+        areas = self.grid.split_area(top.name, direction='vertical', sizes=[0.8, 0.2])
         metrics_area, services_area = areas[0], areas[1]
         logging.debug("Split top into metrics (%s) and services (%s)", metrics_area, services_area)
         
-        # Split metrics into rows (cpu, memory, temperature)
-        areas = self.grid.split_area(metrics_area.name, direction='horizontal', count=3, sizes=[0.33, 0.33, 0.34])
-        cpu_row, memory_row, temp_row = areas[0], areas[1], areas[2]
+        # Split metrics area into even thirds for CPU, memory, temperature
+        areas = self.grid.split_area(metrics_area.name, direction='vertical', count=3, sizes=[0.33, 0.33, 0.34])
+        cpu_col, memory_col, temp_col = areas[0], areas[1], areas[2]
         logging.debug("Split metrics into cpu (%s), memory (%s), and temperature (%s)", 
-                     cpu_row, memory_row, temp_row)
+                     cpu_col, memory_col, temp_col)
         
-        # Split bottom into hostname and IP areas
-        areas = self.grid.split_area(bottom.name, direction='horizontal', count=2, sizes=[0.5, 0.5])
-        hostname_area, ip_area = areas[0], areas[1]
-        logging.debug("Split bottom into hostname (%s) and ip (%s)", hostname_area, ip_area)
+        # Use the bottom area as a single area for hostname/IP
+        # For a tiny display, we'll put hostname and IP in the same area
+        hostname_area = bottom
+        ip_area = bottom  # Same as hostname for now, to be displayed on same line or alternating
         
         # Create areas dictionary
         self.areas = {
@@ -165,9 +168,9 @@ class OLEDDisplay:
             'bottom': bottom,
             'metrics': metrics_area,
             'services': services_area,
-            'cpu': cpu_row,
-            'memory': memory_row,
-            'temperature': temp_row,
+            'cpu': cpu_col,
+            'memory': memory_col,
+            'temperature': temp_col,
             'hostname': hostname_area,
             'ip_address': ip_area
         }
