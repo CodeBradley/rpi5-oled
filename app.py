@@ -197,13 +197,14 @@ class OLEDApplication:
                 # Use 'status' area name to match standard layout
                 self.display.add_container(container, "status")
             
-            # Set up divider
+            # Set up divider (placed in the body area since there's no dedicated divider area)
             divider = DividerContainer(
                 name="divider",
                 orientation="horizontal"
             )
             
-            self.display.add_container(divider, "divider")
+            # Use 'body' area since we don't have a dedicated divider area
+            self.display.add_container(divider, "body")
             
             # Set up hostname container
             if config.get('system_info.show_hostname', True):
