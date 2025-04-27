@@ -104,8 +104,8 @@ class MetricContainer(Container):
         self.unit = unit
         self.value = 0
         self.text_color = 1  # White in monochrome display
-        self.icon_size = 12
-        self.value_size = 10
+        self.icon_size = 8
+        self.value_size = 8
     
     def update(self) -> None:
         """Update the metric value from the provider."""
@@ -128,25 +128,40 @@ class MetricContainer(Container):
             
         super().render(draw, fonts)
             
-        if 'icon' not in fonts or 'text' not in fonts:
+        if 'small_icon' not in fonts or 'small' not in fonts:
             logging.error("Required fonts are missing")
             return
         
-        icon_font = fonts['icon']
-        text_font = fonts['text']
+        # Use smaller fonts on small displays
+        icon_font = fonts['small_icon']
+        text_font = fonts['small']
         
-        # Draw the icon
+        # Calculate vertical position - center in container
+        center_y = self.y + (self.height - self.value_size) // 2
+        
+        # Format the value
+        value = self.value if self.value is not None else 0
+        # Format percentage values without decimal points
+        if self.unit == "%":
+            value_text = f"{int(value)}{self.unit}"
+        else:
+            value_text = f"{value}{self.unit}"
+        
+        # Draw the icon on the left side
+        icon_x = self.x + 2  # Small padding
         draw.text(
-            (self.x, self.y), 
-            self.icon_code, 
-            font=icon_font, 
+            (icon_x, center_y),
+            self.icon_code,
+            font=icon_font,
             fill=self.text_color
         )
         
-        # Draw the value
-        value_text = f"{self.value}{self.unit}" if self.value is not None else "N/A"
+        # Draw the value right-aligned
+        text_width = text_font.getsize(value_text)[0] if hasattr(text_font, 'getsize') else 0
+        text_x = self.x + self.width - text_width - 2  # Right-aligned with small padding
+        
         draw.text(
-            (self.x + self.icon_size + 2, self.y),  # Position after icon with padding
+            (text_x, center_y),
             value_text,
             font=text_font,
             fill=self.text_color
@@ -172,7 +187,7 @@ class ServiceIconContainer(Container):
         super().__init__(name)
         self.services = services
         self.statuses = {}
-        self.icon_size = 16
+        self.icon_size = 8
         self.active_color = 1  # White in monochrome display
         self.inactive_color = 0  # Black in monochrome display
         self.icon_spacing = 2
@@ -199,58 +214,42 @@ class ServiceIconContainer(Container):
             
         super().render(draw, fonts)
             
-        if 'icon' not in fonts:
-            logging.error("Icon font is missing")
+        if 'small_icon' not in fonts:
+            logging.error("Small icon font is missing")
             return
         
-        icon_font = fonts['icon']
+        icon_font = fonts['small_icon']
         
-        # Calculate grid layout based on number of services
+        # For tiny displays, show icons in a vertical stack
         service_count = len(self.services)
-        columns = min(2, service_count)
-        rows = (service_count + columns - 1) // columns  # Ceiling division
         
-        # Calculate icon spacing
-        total_width = columns * self.icon_size + (columns - 1) * self.icon_spacing
-        total_height = rows * self.icon_size + (rows - 1) * self.icon_spacing
+        # Calculate spacing between icons
+        total_height = service_count * self.icon_size
+        padding = 0
+        if total_height < self.height:
+            padding = (self.height - total_height) // (service_count + 1)
         
-        # Start position to center the icons
-        start_x = self.x + (self.width - total_width) // 2
-        start_y = self.y + (self.height - total_height) // 2
+        # Set base position (centered horizontally)
+        base_x = self.x + (self.width - self.icon_size) // 2
+        current_y = self.y + padding
         
-        # Draw each service icon
-        i = 0
+        # Draw each service icon vertically stacked
         for service_name, (icon_code, _) in self.services.items():
-            status = self.statuses.get(service_name, False)
+            is_active = self.statuses.get(service_name, False)
             
-            # Calculate position in the grid
-            col = i % columns
-            row = i // columns
+            # Draw the icon
+            draw.text(
+                (base_x, current_y),
+                icon_code,
+                font=icon_font,
+                fill=self.active_color if is_active else self.inactive_color
+            )
             
-            x = start_x + col * (self.icon_size + self.icon_spacing)
-            y = start_y + row * (self.icon_size + self.icon_spacing)
+            # For inactive services, use a different visual indicator (dimming)
+            # instead of a strike-through to save space
             
-            # Draw the icon with color based on status
-            fill_color = self.active_color if status else self.inactive_color
-            
-            # For monochrome display, we may need to use different icons for active/inactive
-            # or use a background rectangle to indicate status
-            if not status:
-                # Draw a diagonal strike-through for inactive services
-                padding = 2
-                draw.line(
-                    [(x + padding, y + padding), (x + self.icon_size - padding, y + self.icon_size - padding)],
-                    fill=self.active_color,
-                    width=1
-                )
-                draw.line(
-                    [(x + padding, y + self.icon_size - padding), (x + self.icon_size - padding, y + padding)],
-                    fill=self.active_color,
-                    width=1
-                )
-            
-            draw.text((x, y), icon_code, font=icon_font, fill=self.active_color)
-            i += 1
+            # Move to the next icon position
+            current_y += self.icon_size + padding
 
 
 class TextContainer(Container):
@@ -302,20 +301,32 @@ class TextContainer(Container):
             logging.error("Text font is missing")
             return
         
-        text_font = fonts['text']
-        display_text = f"{self.prefix}{self.text}" if self.text else f"{self.prefix}N/A"
+        # Use smaller font for small displays
+        text_font = fonts['small'] if 'small' in fonts else fonts['text']
+        
+        # Truncate text if too long for small display
+        max_chars = 15  # Adjust based on display width and font size
+        text = self.text if self.text else "N/A"
+        if len(text) > max_chars:
+            text = text[:max_chars-2] + ".."  # Truncate with ellipsis
+            
+        display_text = f"{self.prefix}{text}"
+        
+        # Center vertically
+        font_height = 8  # Estimated font height
+        y = self.y + (self.height - font_height) // 2
         
         # Calculate text position based on alignment
         text_width = text_font.getsize(display_text)[0] if hasattr(text_font, 'getsize') else 0
         
         if self.alignment == "left":
-            x = self.x
+            x = self.x + 2  # Small padding
         elif self.alignment == "center":
             x = self.x + (self.width - text_width) // 2
         else:  # right
-            x = self.x + self.width - text_width
+            x = self.x + self.width - text_width - 2  # Small padding
         
-        draw.text((x, self.y), display_text, font=text_font, fill=self.text_color)
+        draw.text((x, y), display_text, font=text_font, fill=self.text_color)
 
 
 class DividerContainer(Container):
