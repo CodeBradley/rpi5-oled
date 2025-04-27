@@ -70,15 +70,12 @@ class OLEDDisplay:
         self.image = Image.new("1", (width, height))
         self.draw = ImageDraw.Draw(self.image)
         
-        # Create standard layout
-        self.create_standard_layout()
+        # Initialize grid layout and areas
+        self.grid = GridLayout(width, height)
+        self.areas = {}
         
         # Load fonts
         self.fonts = load_fonts(icon_size=16, text_size=10)
-        
-        # Initialize grid layout
-        self.grid = GridLayout(width, height)
-        self.areas = {}
         
         # Dictionary of containers to render
         self.containers: Dict[str, Container] = {}
@@ -88,6 +85,9 @@ class OLEDDisplay:
         
         # Track last update time
         self.last_update = 0
+        
+        # Create standard layout
+        self.create_standard_layout()
     
     def _initialize_display(self) -> None:
         """
