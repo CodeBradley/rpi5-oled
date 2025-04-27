@@ -74,20 +74,15 @@ if ! lsmod | grep -q i2c_bcm; then
   raspi-config nonint do_i2c 0
 fi
 
-# ==== HYBRID APPROACH ====
+# ==== VIRTUAL ENVIRONMENT APPROACH ====
 # Install system packages from apt
 echo "Installing system dependencies..."
 apt-get update
 
-# Install core Python packages
+# Install Python venv package and development libraries
 apt-get install -y \
-    python3-pil \
-    python3-yaml \
-    python3-psutil \
-    python3-dev
-
-# Install development libraries with fallbacks for different OS versions
-apt-get install -y \
+    python3-venv \
+    python3-dev \
     libfreetype6-dev \
     libjpeg-dev \
     libopenjp2-7 \
@@ -96,10 +91,24 @@ apt-get install -y \
 # Try to install libtiff - name varies by OS version
 apt-get install -y libtiff5 || apt-get install -y libtiff || true
 
-# Install hardware-specific packages with --break-system-packages
-echo "Installing hardware-specific packages..."
-pip3 install luma.oled RPi.GPIO --break-system-packages
-# ==== END HYBRID APPROACH ====
+# Create and activate a virtual environment
+echo "Creating Python virtual environment..."
+python3 -m venv $INSTALL_DIR/venv
+
+# Install Python packages in the virtual environment
+echo "Installing Python packages into virtual environment..."
+$INSTALL_DIR/venv/bin/pip install --upgrade pip
+$INSTALL_DIR/venv/bin/pip install \
+    pillow \
+    pyyaml \
+    psutil \
+    luma.oled \
+    RPi.GPIO
+    
+# Update the service file to use the Python interpreter from the venv
+echo "Updating service file to use virtual environment..."
+sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/venv/bin/python3 $INSTALL_DIR/app.py|" $INSTALL_DIR/rpi5-oled.service
+# ==== END VIRTUAL ENVIRONMENT APPROACH ====
 
 # Install systemd service
 echo "Installing systemd service..."
