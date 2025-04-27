@@ -237,7 +237,7 @@ class OLEDDisplay:
         for container in self.containers.values():
             container.render(self.draw, self.fonts)
     
-    def update_display(self, force: bool = False) -> bool:
+    def update(self, force: bool = False) -> bool:
         """
         Update the display with the current container data.
         
@@ -263,7 +263,7 @@ class OLEDDisplay:
             return True
         
         except Exception as e:
-            logging.error(f"Error in update_display: {e}")
+            logging.error(f"Error in update: {e}")
             return False
     
     def draw_text(self, position: Tuple[int, int], text: str, 
