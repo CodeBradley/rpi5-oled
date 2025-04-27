@@ -133,17 +133,21 @@ class OLEDDisplay:
         # Create main grid layout
         self.grid = GridLayout(self.width, self.height)
         
-        # Split into main sections
-        header, body = self.grid.split_horizontal(['20%', '80%'])
+        # Split into main sections (header and body)
+        areas = self.grid.split_area('root', direction='horizontal', sizes=['20%', '80%'])
+        header, body = areas[0], areas[1]
         
-        # Split header into sections
-        hostname, uptime = header.split_vertical(['60%', '40%'])
+        # Split header into sections (hostname and uptime)
+        areas = self.grid.split_area(header.name, direction='vertical', sizes=['60%', '40%'])
+        hostname, uptime = areas[0], areas[1]
         
-        # Split body into main sections
-        metrics, status = body.split_vertical(['70%', '30%'])
+        # Split body into main sections (metrics and status)
+        areas = self.grid.split_area(body.name, direction='vertical', sizes=['70%', '30%'])
+        metrics, status = areas[0], areas[1]
         
-        # Split metrics into columns
-        cpu_col, mem_col, temp_col = metrics.split_vertical(['33%', '33%', '34%'])
+        # Split metrics into columns (cpu, memory, temperature)
+        areas = self.grid.split_area(metrics.name, direction='vertical', sizes=['33%', '33%', '34%'])
+        cpu_col, mem_col, temp_col = areas[0], areas[1], areas[2]
         
         # Create areas dictionary
         self.areas = {
