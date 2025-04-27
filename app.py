@@ -194,7 +194,8 @@ class OLEDApplication:
                 )
                 
                 # Add the container to the display
-                self.display.add_container(container, "services")
+                # Use 'status' area name to match standard layout
+                self.display.add_container(container, "status")
             
             # Set up divider
             divider = DividerContainer(
