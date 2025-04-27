@@ -188,8 +188,13 @@ class OLEDDisplay:
     def show(self) -> None:
         """Update the physical display with the current buffer."""
         try:
+            logging.debug("Displaying image to physical device")
+            pixels = list(self.image.getdata())
+            white_pixels = sum(1 for p in pixels if p > 0)
+            logging.debug(f"Image has {white_pixels} lit pixels out of {len(pixels)}")
             self.device.display(self.image)
             self.last_update = time.time()
+            logging.debug(f"Display updated at {self.last_update}")
         except Exception as e:
             logging.error(f"Error updating display: {e}")
     
@@ -234,8 +239,11 @@ class OLEDDisplay:
     
     def render_containers(self) -> None:
         """Render all containers to the display buffer."""       
-        for container in self.containers.values():
+        logging.debug(f"Rendering {len(self.containers)} containers to buffer")
+        for i, container in enumerate(self.containers.values()):
+            logging.debug(f"  Rendering container {i+1}/{len(self.containers)}: {container.name}")
             container.render(self.draw, self.fonts)
+        logging.debug("Finished rendering all containers")
     
     def update(self, force: bool = False) -> bool:
         """
