@@ -78,16 +78,23 @@ fi
 # Install system packages from apt
 echo "Installing system dependencies..."
 apt-get update
+
+# Install core Python packages
 apt-get install -y \
-    python3-pillow \
+    python3-pil \
     python3-yaml \
     python3-psutil \
-    python3-dev \
+    python3-dev
+
+# Install development libraries with fallbacks for different OS versions
+apt-get install -y \
     libfreetype6-dev \
     libjpeg-dev \
     libopenjp2-7 \
-    libtiff5 \
     i2c-tools
+
+# Try to install libtiff - name varies by OS version
+apt-get install -y libtiff5 || apt-get install -y libtiff || true
 
 # Install hardware-specific packages with --break-system-packages
 echo "Installing hardware-specific packages..."
