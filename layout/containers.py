@@ -128,40 +128,48 @@ class MetricContainer(Container):
             
         super().render(draw, fonts)
             
-        if 'small_icon' not in fonts or 'small' not in fonts:
-            logging.error("Required fonts are missing")
-            return
+        if 'metric_icon' not in fonts or 'metric_text' not in fonts:
+            # Fall back to other fonts if needed
+            icon_font = fonts.get('small_icon', fonts.get('icon', None))
+            text_font = fonts.get('small', fonts.get('text', None))
+            if icon_font is None or text_font is None:
+                logging.error("Required fonts are missing")
+                return
+        else:
+            # Use the right font sizes from the mockup
+            icon_font = fonts['metric_icon']  # 6px for icons
+            text_font = fonts['metric_text']  # 12px for metrics text
+            
+        # For simple layout, center everything in the column
         
-        # Use smaller fonts on small displays
-        icon_font = fonts['small_icon']
-        text_font = fonts['small']
-        
-        # Position elements with minimal spacing
-        center_y = self.y + 1  # Minimal padding
-        
-        # Format the value
+        # Format the value - integers for percentage
         value = self.value if self.value is not None else 0
-        # Format percentage values without decimal points
         if self.unit == "%":
             value_text = f"{int(value)}{self.unit}"
         else:
             value_text = f"{value}{self.unit}"
         
-        # Draw the icon on the left side
-        icon_x = self.x + 2  # Small padding
+        # Center value in container
+        text_width = text_font.getsize(value_text)[0] if hasattr(text_font, 'getsize') else 0
+        text_x = self.x + (self.width - text_width) // 2
+        text_y = self.y + (self.height // 2) - 2  # Position in center
+        
+        # Center icon above the value
+        icon_width = icon_font.getsize(self.icon_code)[0] if hasattr(icon_font, 'getsize') else 0
+        icon_x = self.x + (self.width - icon_width) // 2  
+        icon_y = self.y + 2  # Small padding from top
+        
+        # Draw the icon centered above the value
         draw.text(
-            (icon_x, center_y),
+            (icon_x, icon_y),
             self.icon_code,
             font=icon_font,
             fill=self.text_color
         )
         
-        # Draw the value right-aligned
-        text_width = text_font.getsize(value_text)[0] if hasattr(text_font, 'getsize') else 0
-        text_x = self.x + self.width - text_width - 2  # Right-aligned with small padding
-        
+        # Draw the value centered below the icon
         draw.text(
-            (text_x, center_y),
+            (text_x, text_y),
             value_text,
             font=text_font,
             fill=self.text_color

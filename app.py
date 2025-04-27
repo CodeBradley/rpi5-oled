@@ -155,38 +155,24 @@ class OLEDApplication:
                 # Get the icon code
                 icon_code = get_icon_code(icon_name)
                 
-                # Create a separate icon container for the metric
-                icon_container = IconContainer(
-                    name=f"{name}_icon",
-                    icon_code=icon_code
+                # Create a single metric container with both icon and value
+                container = MetricContainer(
+                    name=name,
+                    icon_code=icon_code,
+                    provider=provider,
+                    unit=unit
                 )
                 
-                # Map metric name to area names defined in display.py
+                # Simple direct mapping to metric areas
                 area_map = {
-                    'cpu': {'icon': 'cpu_icon', 'value': 'cpu_value'},
-                    'memory': {'icon': 'memory_icon', 'value': 'memory_value'},
-                    'temperature': {'icon': 'temperature_icon', 'value': 'temperature_value'}
+                    'cpu': 'cpu',
+                    'memory': 'memory',
+                    'temperature': 'temperature'
                 }
                 
-                # Get the correct area names for this metric
+                # Add the container to the corresponding area
                 if name in area_map:
-                    icon_area = area_map[name]['icon']
-                    value_area = area_map[name]['value']
-                    
-                    # Add the icon container to the icon area
-                    self.display.add_container(icon_container, icon_area)
-                    
-                    # Create the metric container (now just for the value)
-                    # We'll hide the icon within the metric container since we have a separate icon container
-                    container = MetricContainer(
-                        name=name,
-                        icon_code="",  # Empty icon - we're using separate icon container
-                        provider=provider,
-                        unit=unit
-                    )
-                    
-                    # Add the value container to the value area for this metric
-                    self.display.add_container(container, value_area)
+                    self.display.add_container(container, area_map[name])
             
             # Set up service container
             service_configs = config.get_services()
@@ -213,9 +199,8 @@ class OLEDApplication:
                     services=services
                 )
                 
-                # Add the service container to the service area in the first row
-                # This is where the icons for running services will be displayed
-                self.display.add_container(container, "service_area1")
+                # Add the service container to the services area
+                self.display.add_container(container, "services")
             
             # We no longer need a divider with the new grid layout
             # The grid borders will provide visual separation
@@ -245,8 +230,8 @@ class OLEDApplication:
                     prefix="IP: "
                 )
                 
-                # Place IP address in its dedicated area in the bottom section
-                self.display.add_container(ip_container, "ip_address")
+                # Place IP address in the hostname area (shared with hostname)
+                self.display.add_container(ip_container, "hostname")
             
             logging.info("Containers set up successfully")
             

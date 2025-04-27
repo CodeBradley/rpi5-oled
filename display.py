@@ -126,72 +126,39 @@ class OLEDDisplay:
     
     def create_standard_layout(self) -> Dict[str, GridArea]:
         """
-        Create a standard layout grid with predefined areas based on mockup specifications.
+        Create a simple horizontal layout with 3 metric areas and info area.
         
         Returns:
             Dictionary of named grid areas for component placement
         """
-        logging.debug("Creating standard layout with dimensions: %dx%d", self.width, self.height)
+        logging.debug("Creating simple layout for 128x32 display")
         
-        # Create main grid layout with the exact dimensions of the display
+        # Create main grid layout
         self.grid = GridLayout(self.width, self.height)
         
-        # First create a 4-row layout for the main content areas
-        # The first 3 rows are for metrics, last row for hostname/IP
-        rows = self.grid.split_area('root', direction='horizontal', count=4, sizes=[0.25, 0.25, 0.25, 0.25])
-        cpu_row, mem_row, temp_row, info_row = rows
+        # First split into metrics and info sections (top and bottom)
+        # Metrics get 80% of height, info gets 20%
+        main_areas = self.grid.split_area('root', direction='horizontal', sizes=[0.8, 0.2])
+        metrics_area, info_area = main_areas
         
-        # For each metric row, split into (icon | value | service area)
-        # Icon takes about 25%, value 50%, service area 25%
+        # Split metrics area into 3 equal columns for CPU, memory, and temperature
+        metric_areas = self.grid.split_area(metrics_area.name, direction='vertical', count=3)
+        cpu_area, memory_area, temperature_area = metric_areas
         
-        # CPU row split
-        cpu_areas = self.grid.split_area(cpu_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
-        cpu_icon_area, cpu_value_area, service_area1 = cpu_areas
+        # Split info area for hostname and services
+        info_areas = self.grid.split_area(info_area.name, direction='vertical', sizes=[0.7, 0.3])
+        hostname_area, services_area = info_areas
         
-        # Memory row split
-        mem_areas = self.grid.split_area(mem_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
-        mem_icon_area, mem_value_area, service_area2 = mem_areas
-        
-        # Temperature row split
-        temp_areas = self.grid.split_area(temp_row.name, direction='vertical', count=3, sizes=[0.25, 0.5, 0.25])
-        temp_icon_area, temp_value_area, service_area3 = temp_areas
-        
-        # For bottom info row, split into hostname and IP sections
-        info_areas = self.grid.split_area(info_row.name, direction='vertical', count=2, sizes=[0.5, 0.5])
-        hostname_area, ip_area = info_areas
-        
-        # Combine service areas for a unified service column
-        services_area = service_area1  # Primary service area, we'll use this one
-        
-        # Create areas dictionary with proper naming to match the mockup layout
+        # Create a simple dictionary of areas
         self.areas = {
             'root': self.grid.root,
-            
-            # Row areas
-            'cpu_row': cpu_row,
-            'memory_row': mem_row,
-            'temperature_row': temp_row,
-            'info_row': info_row,
-            
-            # Metric icon areas
-            'cpu_icon': cpu_icon_area,
-            'memory_icon': mem_icon_area,
-            'temperature_icon': temp_icon_area,
-            
-            # Metric value areas
-            'cpu_value': cpu_value_area,
-            'memory_value': mem_value_area,
-            'temperature_value': temp_value_area,
-            
-            # Service areas - use service_area1 as the main one
-            'services': services_area,
-            'service_area1': service_area1,
-            'service_area2': service_area2,
-            'service_area3': service_area3,
-            
-            # Info areas
+            'metrics': metrics_area,
+            'info': info_area,
+            'cpu': cpu_area,
+            'memory': memory_area,
+            'temperature': temperature_area,
             'hostname': hostname_area,
-            'ip_address': ip_area
+            'services': services_area
         }
         logging.debug("Created areas dictionary with %d entries: %s", 
                      len(self.areas), list(self.areas.keys()))
