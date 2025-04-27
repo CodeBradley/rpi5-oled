@@ -1,3 +1,6 @@
+# This is an AI Test
+This repo was just a test of the AI features of Windsurf and whether or not it was capable of creating an OLED grid system where I can display certain widgets based on a mockup I provided it with. I have not fully reviewed the code and do not plan to use it for my project. There could be some successes, but there's definitely some failures. 
+
 # RPi5 OLED Framework
 
 A modular, grid-based layout system for Raspberry Pi OLED displays, showing resource utilization metrics, service statuses, and network information.
@@ -48,7 +51,7 @@ The easiest way to install is by using our deployment script, which pulls direct
 
 ```bash
 # One-line install (pulls latest code and sets up service)
-curl -sSL https://raw.githubusercontent.com/CodeBradley/rpi5-oled/framework/deploy.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/CodeBradley/rpi5-oled/framework/deploy-hybrid.sh | sudo bash
 ```
 
 ### Manual Installation
