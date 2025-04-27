@@ -332,11 +332,9 @@ def main():
     """Main entry point."""
     args = parse_arguments()
     
-    # Set log level if verbose
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    # Configure logging
+    # Set to DEBUG for troubleshooting
+    logging.basicConfig(level=logging.DEBUG)
     
     try:
         # Handle hardware check only mode

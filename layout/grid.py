@@ -153,6 +153,18 @@ class GridLayout:
             
         return area
     
+    def has_area(self, name: str) -> bool:
+        """
+        Check if a grid area with the given name exists.
+        
+        Args:
+            name: Name of the grid area to check
+            
+        Returns:
+            True if the area exists, False otherwise
+        """
+        return name in self.areas
+        
     def get_area(self, name: str) -> GridArea:
         """
         Get a grid area by name.

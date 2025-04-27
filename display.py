@@ -125,29 +125,38 @@ class OLEDDisplay:
             raise RuntimeError(f"Failed to initialize OLED display: {e}")
     
     def create_standard_layout(self) -> Dict[str, GridArea]:
-        """Create a standard layout grid with predefined areas.
+        """
+        Create a standard layout grid with predefined areas.
         
         Returns:
             Dictionary of named grid areas for component placement
         """
+        logging.debug("Creating standard layout with dimensions: %dx%d", self.width, self.height)
+        
         # Create main grid layout
         self.grid = GridLayout(self.width, self.height)
+        logging.debug("Created grid layout with root area: %s", self.grid.root)
         
         # Split into main sections (header and body)
         areas = self.grid.split_area('root', direction='horizontal', sizes=[0.2, 0.8])
         header, body = areas[0], areas[1]
+        logging.debug("Split root into header (%s) and body (%s)", header, body)
         
         # Split header into sections (hostname and uptime)
         areas = self.grid.split_area(header.name, direction='vertical', sizes=[0.6, 0.4])
         hostname, uptime = areas[0], areas[1]
+        logging.debug("Split header into hostname (%s) and uptime (%s)", hostname, uptime)
         
         # Split body into main sections (metrics and status)
-        areas = self.grid.split_area(body.name, direction='vertical', sizes=[0.7, 0.3])
+        areas = self.grid.split_area(body.name, direction='horizontal', sizes=[0.6, 0.4])
         metrics, status = areas[0], areas[1]
+        logging.debug("Split body into metrics (%s) and status (%s)", metrics, status)
         
         # Split metrics into columns (cpu, memory, temperature)
         areas = self.grid.split_area(metrics.name, direction='vertical', count=3, sizes=[0.33, 0.33, 0.34])
         cpu_col, mem_col, temp_col = areas[0], areas[1], areas[2]
+        logging.debug("Split metrics into cpu (%s), memory (%s), and temperature (%s)", 
+                     cpu_col, mem_col, temp_col)
         
         # Create areas dictionary
         self.areas = {
@@ -162,6 +171,13 @@ class OLEDDisplay:
             'memory': mem_col,
             'temperature': temp_col
         }
+        logging.debug("Created areas dictionary with %d entries: %s", 
+                     len(self.areas), list(self.areas.keys()))
+        
+        # Check if grid areas match dictionary
+        for name, area in self.areas.items():
+            if name != 'root' and not self.grid.has_area(area.name):
+                logging.error("Area '%s' exists in areas dict but not in grid!", name)
         
         return self.areas
     
