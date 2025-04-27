@@ -188,7 +188,7 @@ class OLEDDisplay:
         Raises:
             KeyError: If the area does not exist
         """
-        area = self.layout.get_area(area_name)
+        area = self.grid.get_area(area_name)
         container.set_position(area.x, area.y, area.width, area.height)
         self.containers[container.name] = container
     
