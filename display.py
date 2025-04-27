@@ -70,11 +70,15 @@ class OLEDDisplay:
         self.image = Image.new("1", (width, height))
         self.draw = ImageDraw.Draw(self.image)
         
+        # Create standard layout
+        self.create_standard_layout()
+        
         # Load fonts
         self.fonts = load_fonts(icon_size=16, text_size=10)
         
-        # Create grid layout
-        self.layout = GridLayout(width, height)
+        # Initialize grid layout
+        self.grid = GridLayout(width, height)
+        self.areas = {}
         
         # Dictionary of containers to render
         self.containers: Dict[str, Container] = {}
@@ -120,6 +124,43 @@ class OLEDDisplay:
             logging.error(f"Failed to initialize OLED display: {e}")
             raise RuntimeError(f"Failed to initialize OLED display: {e}")
     
+    def create_standard_layout(self) -> Dict[str, GridArea]:
+        """Create a standard layout grid with predefined areas.
+        
+        Returns:
+            Dictionary of named grid areas for component placement
+        """
+        # Create main grid layout
+        self.grid = GridLayout(self.width, self.height)
+        
+        # Split into main sections
+        header, body = self.grid.split_horizontal(['20%', '80%'])
+        
+        # Split header into sections
+        hostname, uptime = header.split_vertical(['60%', '40%'])
+        
+        # Split body into main sections
+        metrics, status = body.split_vertical(['70%', '30%'])
+        
+        # Split metrics into columns
+        cpu_col, mem_col, temp_col = metrics.split_vertical(['33%', '33%', '34%'])
+        
+        # Create areas dictionary
+        self.areas = {
+            'root': self.grid.root,
+            'header': header,
+            'hostname': hostname,
+            'uptime': uptime,
+            'body': body,
+            'metrics': metrics,
+            'status': status,
+            'cpu': cpu_col,
+            'memory': mem_col,
+            'temperature': temp_col
+        }
+        
+        return self.areas
+    
     def clear(self) -> None:
         """Clear the display buffer."""
         self.draw.rectangle((0, 0, self.width, self.height), fill=0)
@@ -163,7 +204,7 @@ class OLEDDisplay:
             container.update()
     
     def render_containers(self) -> None:
-        """Render all containers to the display buffer."""
+        """Render all containers to the display buffer."""       
         for container in self.containers.values():
             container.render(self.draw, self.fonts)
     
